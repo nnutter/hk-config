@@ -5,6 +5,7 @@ follows the packageZipUrl it lists, and then loads modules out of that zip.
 Serving a release-style tree over HTTP reproduces that chain, so a missing
 asset or a broken import fails here rather than after the release is published.
 """
+
 from __future__ import annotations
 
 import functools
@@ -55,7 +56,7 @@ class Package:
     """The packaged artifacts, named the way a consumer names them."""
 
     def __init__(self, dist: Path) -> None:
-        self.zip = sorted(dist.glob("*.zip"))[0]
+        self.zip = min(dist.glob("*.zip"))
         self.name, _, self.version = self.zip.stem.partition("@")
         self.metadata = dist / self.zip.stem
         assert self.version, f"unexpected package name: {self.zip.name}"
@@ -86,7 +87,7 @@ def release(package: Package, tmp_path_factory: pytest.TempPathFactory):
     shutil.copy(package.zip, root / f"v{package.version}" / package.zip.name)
 
     class Quiet(http.server.SimpleHTTPRequestHandler):
-        def log_message(self, *args: object) -> None:
+        def log_message(self, format: str, *args: object) -> None:
             pass
 
     server = http.server.ThreadingHTTPServer(
@@ -113,6 +114,7 @@ def pkl_eval(release: str, work: Path, *args: str) -> subprocess.CompletedProces
             f"--http-rewrite={GITHUB_RELEASE}={release}",
         ],
         cwd=work,
+        check=False,
         capture_output=True,
         text=True,
     )

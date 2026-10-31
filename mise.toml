@@ -1,13 +1,17 @@
 [tools]
-hk = "2.10.0"                      # keep in sync with the hk version pinned in Config.pkl
-pkl = "0.32.2"
-uv = "0.13.6"
-go = "1.27.3"
-"go:github.com/alecthomas/go-check-sumtype/cmd/go-check-sumtype" = "0.5.0"
-"go:github.com/nnutter/constable/cmd/constable" = "0.4.0"
-"go:go.uber.org/nilaway/cmd/nilaway" = "0.0.0-20260918162853-acb8859b9031"
-"go:github.com/nnutter/timber" = "0.21.0"
-"github:nnutter/mdlint" = "0.4.2"
+hk = "2.10.0"  # keep in sync with the hk version pinned in Config.pkl
+pkl = "latest"
+uv = "latest"
+go = "latest"
+"go:github.com/alecthomas/go-check-sumtype/cmd/go-check-sumtype" = "latest"
+"go:github.com/nnutter/constable/cmd/constable" = "latest"
+"go:go.uber.org/nilaway/cmd/nilaway" = "latest"
+"go:github.com/nnutter/timber" = "latest"
+"github:nnutter/mdlint" = "latest"
+jactionlint = "latest"
+shellcheck = "latest"
+ruff = "latest"
+ty = "latest"
 
 [tasks.setup]
 description = "Install hk's git hooks in this checkout"
@@ -16,6 +20,8 @@ run = "hk install"
 [tasks.check]
 description = "Validate the config, then run hk's checks and the package tests"
 run = [
+  # ty resolves `pytest` from the project environment, so it must exist first.
+  "uv sync --locked",
   "hk validate",
   "hk check --all",
   "uv run pytest",
