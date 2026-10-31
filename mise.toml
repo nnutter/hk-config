@@ -1,0 +1,20 @@
+[tools]
+hk = "2.10.0"                      # keep in sync with the hk version pinned in Config.pkl
+pkl = "0.32.2"
+uv = "0.13.6"
+
+[tasks.check]
+description = "Validate the config, then run hk's checks and the package tests"
+run = [
+  "hk validate",
+  "hk check --all",
+  "uv run pytest",
+]
+
+[tasks.fix]
+description = "Run hk's fixes over every file"
+run = "hk fix --all"
+
+[tasks.package]
+description = "Build the Pkl package into dist/"
+run = "pkl project package --output-path dist"

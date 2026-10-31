@@ -1,0 +1,9 @@
+/// Builtins that hk does not ship.
+///
+/// Add one property per builtin. Consumers import this module from a released
+/// package:
+///
+/// ```pkl
+/// import "package://github.com/nnutter/hk-config/releases/download/v0.1.0/hk-config@0.1.0#/Builtins.pkl" as Extra
+/// ```
+module hk_config.Builtins

@@ -1,0 +1,26 @@
+amends "pkl:Project"
+
+package {
+  name = "hk-config"
+  // The release workflow sets VERSION from the pushed tag so that the
+  // published artifact is named after the release.
+  version = read?("env:VERSION") ?? "0.0.1-SNAPSHOT"
+  authors { "Nathan Nutter <nnutter@duck.com>" }
+  baseUri = "package://pkg.pkl-lang.org/github.com/nnutter/hk-config"
+  packageZipUrl =
+    "https://github.com/nnutter/hk-config/releases/download/v\(version)/\(name)@\(version).zip"
+  sourceCode = "https://github.com/nnutter/hk-config"
+  sourceCodeUrlScheme =
+    "https://github.com/nnutter/hk-config/blob/v\(version)/%{path}#%{line}-%{endLine}"
+  license = "MIT"
+  description = "Additional builtins for hk, and the configuration schema they target"
+  // Only the Pkl modules and the README belong in the published package.
+  exclude = new {
+    "hk.pkl"
+    "mise.toml"
+    "pyproject.toml"
+    "uv.lock"
+    "scripts/**"
+    "tests/**"
+  }
+}

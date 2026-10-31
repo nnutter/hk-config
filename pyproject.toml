@@ -1,0 +1,11 @@
+[project]
+name = "hk-config"
+version = "0.0.0"
+description = "Pkl package of extra hk builtins, and the tests that check it"
+requires-python = ">=3.9"
+
+[dependency-groups]
+dev = ["pytest"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
