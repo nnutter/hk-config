@@ -1,0 +1,24 @@
+/// Builtins that hk does not ship.
+///
+/// Add one property per builtin. Consumers import this module from a released
+/// package:
+///
+/// ```pkl
+/// import "package://github.com/nnutter/hk-config/releases/download/v0.1.0/hk-config@0.1.0#/Builtins.pkl" as Extra
+/// ```
+module hk_config.Builtins
+
+/// Lints and formats Markdown with mdlint.
+mdlint = import("builtins/mdlint.pkl").mdlint
+
+/// Checks that `switch` statements over sum types cover every variant.
+go_check_sumtype = import("builtins/go_check_sumtype.pkl").go_check_sumtype
+
+/// Lints Go code with constable: non-mutating contracts, complexity, and predicates.
+constable = import("builtins/constable.pkl").constable
+
+/// Detects potential nil panics with nilaway.
+nilaway = import("builtins/nilaway.pkl").nilaway
+
+/// Adds a Gerrit-compatible Change-Id to a commit message.
+timber_commit_msg = import("builtins/timber_commit_msg.pkl").timber_commit_msg

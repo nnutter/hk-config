@@ -1,0 +1,29 @@
+import "../Config.pkl" as Config
+
+/// Adds a Gerrit-compatible Change-Id to a commit message.
+///
+/// A commit-message step, not a file step: assign it inside the commit-msg
+/// hook and turn fixes on, because the hook has to rewrite the message file
+/// rather than report on it.
+///
+/// ```pkl
+/// hooks {
+///   ["commit-msg"] {
+///     fix = true
+///     steps {
+///       ["change-id"] = Extra.timber_commit_msg
+///     }
+///   }
+/// }
+/// ```
+///
+/// hk step tests have no commit message file, so this step carries no tests;
+/// the package test reads its command back instead.
+timber_commit_msg = new Config.Step {
+  fix = new Config.CommandSpec {
+    command = new Config.Command {
+      argv = List("timber", "review", "commit-msg", "{{commit_msg_file}}")
+    }
+    effect = "write"
+  }
+}

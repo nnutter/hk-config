@@ -1,0 +1,58 @@
+import "../Config.pkl" as Config
+
+/// Detects potential nil panics with nilaway.
+///
+/// `-include-pkgs $(go list -m)` narrows the analysis to this module: nilaway
+/// otherwise analyzes every dependency and the standard library, which is slow
+/// and reports problems that this repository cannot fix. Its pretty-printed
+/// explanation spans several lines, so the step does not claim gcc diagnostics.
+nilaway = new Config.Step {
+  glob = List("**/*.go")
+  workspace_indicator = "go.mod"
+  dir = "{{workspace}}"
+  check = new Config.CommandSpec {
+    command = "nilaway -include-pkgs $(go list -m) ./..."
+    effect = "read"
+  }
+  tests {
+    local const dereferencesNil =
+      """
+      package main
+
+      type T struct{ X int }
+
+      func main() {
+      \tvar t *T
+      \t_ = t.X
+      }
+      """
+    local const initializesValue =
+      """
+      package main
+
+      type T struct{ X int }
+
+      func main() {
+      \tt := &T{}
+      \t_ = t.X
+      }
+      """
+    // The analyzer driver exits 3, not 1, when it reports a diagnostic.
+    ["check nil dereference"] = new Config.StepTest {
+      tmpdir = true
+      write {
+        ["go.mod"] = "module example.com/test\n\ngo 1.21\n"
+        ["main.go"] = dereferencesNil
+      }
+      expect { code = 3 }
+    }
+    ["check initialized value"] = new Config.StepTest {
+      tmpdir = true
+      write {
+        ["go.mod"] = "module example.com/test\n\ngo 1.21\n"
+        ["main.go"] = initializesValue
+      }
+      expect { code = 0 }
+    }
+  }
+}

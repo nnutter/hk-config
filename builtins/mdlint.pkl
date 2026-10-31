@@ -1,0 +1,46 @@
+import "../Config.pkl" as Config
+
+/// Lints and formats Markdown with mdlint.
+///
+/// `mdlint check` reports lint rules but not the formatting that
+/// `mdlint format` rewrites, so the step runs both: `format --check` catches
+/// formatting drift, and `check --no-fix` catches the rules. `--no-fix` keeps
+/// the check read-only even when the project's mdlint config would apply fixes.
+mdlint = new Config.Step {
+  glob = List("**/*.md", "**/*.markdown")
+  batch = true
+  check = new Config.CommandSpec {
+    command = "mdlint format --check {{files}} && mdlint check --no-fix {{files}}"
+    effect = "read"
+  }
+  fix = new Config.CommandSpec {
+    command = "mdlint format {{files}} && mdlint check --fix {{files}}"
+    effect = "write"
+  }
+  tests {
+    local const bad = "# Title\ncontent.\n"
+    local const good = "# Title\n\ncontent.\n"
+    ["check bad file"] = new Config.StepTest {
+      tmpdir = true
+      write { ["test.md"] = bad }
+      expect { code = 1 }
+    }
+    ["check good file"] = new Config.StepTest {
+      tmpdir = true
+      write { ["test.md"] = good }
+      expect { code = 0 }
+    }
+    ["fix bad file"] = new Config.StepTest {
+      run = "fix"
+      tmpdir = true
+      write { ["test.md"] = bad }
+      expect { files { ["test.md"] = good } }
+    }
+    ["fix good file"] = new Config.StepTest {
+      run = "fix"
+      tmpdir = true
+      write { ["test.md"] = good }
+      expect { files { ["test.md"] = good } }
+    }
+  }
+}

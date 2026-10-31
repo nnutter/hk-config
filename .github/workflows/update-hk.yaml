@@ -1,0 +1,110 @@
+name: update-hk
+
+# The package pins exactly one hk version, so follow upstream instead of
+# waiting for someone to notice. Update the pin, let the pull request checks
+# decide, and only then tag and release: the tag is hk's tag, because the
+# package version tracks the hk release it targets.
+on:
+  schedule:
+    - cron: "23 6 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: update-hk
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      actions: write # start the release workflow
+      contents: write # push the update branch, create the tag
+      pull-requests: write # open the pull request and enable auto-merge
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: master
+          persist-credentials: false
+      - uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
+      - name: Find the latest hk release
+        id: hk
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=$(gh api repos/jdx/hk/releases/latest --jq .tag_name)
+          echo "version=${tag#v}" >>"$GITHUB_OUTPUT"
+          echo "latest hk release: $tag"
+      - name: Read the hk version this package pins
+        id: pinned
+        run: |
+          version=$(sed -n 's|^amends "package://github.com/jdx/hk/releases/download/v\([^/]*\)/hk@.*|\1|p' Config.pkl)
+          echo "version=$version" >>"$GITHUB_OUTPUT"
+      - name: Stop unless hk released something new
+        if: steps.hk.outputs.version == steps.pinned.outputs.version
+        run: echo "hk ${{ steps.pinned.outputs.version }} is already pinned"
+      - name: Update the pin
+        if: steps.hk.outputs.version != steps.pinned.outputs.version
+        run: scripts/update-hk "${{ steps.hk.outputs.version }}"
+      - name: Open the pull request with auto-merge
+        id: pr
+        if: steps.hk.outputs.version != steps.pinned.outputs.version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.hk.outputs.version }}
+        run: |
+          branch=update-hk
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$branch"
+          git commit -am "Update hk to v$VERSION"
+          git push --force \
+            "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY.git" \
+            "HEAD:refs/heads/$branch"
+          # A left-over pull request from an earlier run is reused, so the
+          # daily run does not fail on its own history.
+          pr=$(gh pr list --head "$branch" --state open --json number --jq '.[0].number')
+          if [[ -z $pr ]]; then
+            gh pr create \
+              --base master \
+              --head "$branch" \
+              --title "Update hk to v$VERSION" \
+              --body "hk v$VERSION is the latest release. This updates the schema pin, the builtins import, the hk tool pin, and the documented package version. Auto-merge is on; when it merges, this workflow tags the package v$VERSION and starts the release."
+            pr=$(gh pr list --head "$branch" --state open --json number --jq '.[0].number')
+          fi
+          gh pr merge "$pr" --auto --squash --delete-branch
+          echo "number=$pr" >>"$GITHUB_OUTPUT"
+      - name: Tag the merge and start the release
+        if: steps.hk.outputs.version != steps.pinned.outputs.version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.hk.outputs.version }}
+          PR: ${{ steps.pr.outputs.number }}
+        run: |
+          # Auto-merge waits for the pull request checks. Hold this job until
+          # GitHub merges, so the tag lands on the commit CI approved.
+          state=OPEN
+          for _ in {1..90}; do
+            state=$(gh pr view "$PR" --json state --jq .state)
+            [[ $state == MERGED ]] && break
+            [[ $state == CLOSED ]] && break
+            sleep 20
+          done
+          if [[ $state != MERGED ]]; then
+            echo "pull request $PR is $state, so nothing was tagged" >&2
+            exit 1
+          fi
+          tag="v$VERSION"
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$tag" >/dev/null 2>&1; then
+            echo "tag $tag already exists, so there is nothing to release"
+            exit 0
+          fi
+          sha=$(gh pr view "$PR" --json mergeCommit --jq .mergeCommit.oid)
+          gh api -X POST "repos/$GITHUB_REPOSITORY/git/refs" \
+            -f ref="refs/tags/$tag" \
+            -f sha="$sha"
+          # A tag made with GITHUB_TOKEN does not start a workflow, so start
+          # the release explicitly.
+          gh workflow run release.yaml --ref master -f version="$VERSION"

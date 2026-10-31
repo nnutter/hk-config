@@ -1,0 +1,20 @@
+// This repository's own hk config.
+//
+// It amends this package's Config.pkl so that the schema pin is exercised by
+// the real hk binary, and it runs the builtins from the working tree.
+// The hk version in the import below must equal the pin in Config.pkl. A
+// mismatch builds different Pkl types, and hk validate rejects the config.
+amends "Config.pkl"
+
+import "package://github.com/jdx/hk/releases/download/v2.10.0/hk@2.10.0#/Builtins.pkl" as Hk
+
+import "Builtins.pkl" as Extra
+
+steps {
+  ["constable"] = Extra.constable
+  ["go_check_sumtype"] = Extra.go_check_sumtype
+  ["hk_test"] = Hk.hk_test
+  ["mdlint"] = Extra.mdlint
+  ["nilaway"] = Extra.nilaway
+  ["pkl_format"] = Hk.pkl_format
+}
