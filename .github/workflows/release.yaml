@@ -3,14 +3,23 @@ name: release
 # Pkl resolves a package URL by fetching the metadata asset (name@version, no
 # extension) and then the zip that the metadata's packageZipUrl points at, so
 # both files that `pkl project package` writes must be release assets.
+#
+# Workflow runs on a tag push, and the update-hk workflow starts it by hand
+# because a tag created with GITHUB_TOKEN starts no workflow.
 on:
   push:
     tags: ["v[0-9]+.*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, without the leading v"
+        required: true
+        type: string
 
 permissions: {}
 
 concurrency:
-  group: release-${{ github.ref_name }}
+  group: release-${{ inputs.version != '' && format('v{0}', inputs.version) || github.ref_name }}
   cancel-in-progress: false
 
 jobs:
@@ -24,19 +33,31 @@ jobs:
     permissions:
       contents: write
     steps:
+      # Check out the tag, not the ref the run started from, so the published
+      # package is the tree the tag names.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ inputs.version != '' && format('v{0}', inputs.version) || github.ref_name }}
           persist-credentials: false
       - uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
       # The tag names the release and the package version, so a tag that is not
       # a version must not reach the upload.
       - name: Derive the package version from the tag
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
-          version="${GITHUB_REF_NAME#v}"
+          if [[ -n $INPUT_VERSION ]]; then
+            tag="v$INPUT_VERSION"
+          else
+            tag="$REF_NAME"
+          fi
+          version="${tag#v}"
           if [[ ! $version =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
-            echo "::error::tag $GITHUB_REF_NAME is not v<major>.<minor>.<patch>"
+            echo "::error::$tag is not v<major>.<minor>.<patch>"
             exit 1
           fi
+          echo "TAG=$tag" >>"$GITHUB_ENV"
           echo "VERSION=$version" >>"$GITHUB_ENV"
       # Re-runs the checks and the package tests against the release version,
       # then writes the artifacts that get uploaded.
@@ -44,8 +65,8 @@ jobs:
       - run: mise run package
       - name: Publish the GitHub release
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" dist/* \
-            --title "$GITHUB_REF_NAME" \
+          gh release create "$TAG" dist/* \
+            --title "$TAG" \
             --generate-notes

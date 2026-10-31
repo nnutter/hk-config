@@ -1,0 +1,71 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.9"
+# ///
+"""Point this package at a different hk release.
+
+The hk version lives in three places: the schema pin in Config.pkl, the hk
+builtins import in hk.pkl, and the hk tool pin in mise.toml. The README spells
+the version as <hk-version> because the package version tracks hk's: a tag
+names both the hk release this package targets and the release of the package
+itself.
+
+Usage: scripts/update-hk <version>   (without the leading v)
+"""
+from __future__ import annotations
+
+import re
+import sys
+from pathlib import Path
+
+repo = Path(__file__).resolve().parent.parent
+version_pattern = re.compile(r"\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?")
+pinned = re.compile(
+    r'^amends "package://github\.com/jdx/hk/releases/download/v(?P<version>[^/]+)/hk@.*$',
+    re.MULTILINE,
+)
+
+
+def hk_uri(version: str) -> str:
+    """The release path that both Pkl pins share."""
+    return f"download/v{version}/hk@{version}"
+
+
+def replace(path: Path, old: str, new: str) -> None:
+    text = path.read_text()
+    if old not in text:
+        raise SystemExit(f"{path.name}: cannot find {old!r}")
+    path.write_text(text.replace(old, new))
+
+
+def main() -> None:
+    if len(sys.argv) != 2:
+        raise SystemExit("usage: scripts/update-hk <version>")
+    version = sys.argv[1]
+    if not version_pattern.fullmatch(version):
+        raise SystemExit(f"not a version: {version}")
+
+    config = repo / "Config.pkl"
+    match = pinned.search(config.read_text())
+    if match is None:
+        raise SystemExit("cannot read the hk version from Config.pkl")
+    old = match["version"]
+    if old == version:
+        print(f"already pinned to hk {version}")
+        return
+
+    replace(config, hk_uri(old), hk_uri(version))
+    replace(repo / "hk.pkl", hk_uri(old), hk_uri(version))
+    replace(repo / "mise.toml", f'hk = "{old}"', f'hk = "{version}"')
+
+    # A leftover reference would pin part of the package to an hk release it no
+    # longer targets.
+    for path in (config, repo / "hk.pkl", repo / "mise.toml"):
+        if old in path.read_text():
+            raise SystemExit(f"{path.name} still references hk {old}")
+
+    print(f"hk {old} -> {version}")
+
+
+if __name__ == "__main__":
+    main()
