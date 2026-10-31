@@ -13,6 +13,12 @@ A release exists for each hk release, so pick the one that matches the hk versio
 ```pkl
 // hk.pkl
 amends "package://github.com/nnutter/hk-config/releases/download/v<hk-version>/hk-config@<hk-version>#/Config.pkl"
+
+import "package://github.com/nnutter/hk-config/releases/download/v<hk-version>/hk-config@<hk-version>#/Builtins.pkl" as Extra
+
+steps {
+  ["mdlint"] = Extra.mdlint
+}
 ```
 
 This package's `Config.pkl` amends hk's, so your config and these builtins share one hk version.
@@ -20,5 +26,12 @@ Amending hk's `Config.pkl` directly also works, but then its version must equal 
 
 ## Builtins
 
-None yet.
-Builtins come from `Builtins.pkl` in the same package and are assigned as steps.
+| Name     | Runs                                                                                          |
+| -------- | --------------------------------------------------------------------------------------------- |
+| `mdlint` | `mdlint check --no-fix` to check, `mdlint format` to fix, on `**/*.md` and `**/*.markdown` |
+
+Install the tools with mise, for example:
+
+```sh
+mise use "github:nnutter/mdlint@latest"
+```
