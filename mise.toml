@@ -10,6 +10,8 @@ go = "latest"
 "github:nnutter/mdlint" = "latest"
 jactionlint = "latest"
 shellcheck = "latest"
+ruff = "latest"
+ty = "latest"
 
 [tasks.setup]
 description = "Install hk's git hooks in this checkout"
@@ -18,6 +20,8 @@ run = "hk install"
 [tasks.check]
 description = "Validate the config, then run hk's checks and the package tests"
 run = [
+  # ty resolves `pytest` from the project environment, so it must exist first.
+  "uv sync --locked",
   "hk validate",
   "hk check --all",
   "uv run pytest",
