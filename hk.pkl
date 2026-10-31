@@ -15,5 +15,6 @@ steps {
   ["go_check_sumtype"] = Extra.go_check_sumtype
   ["hk_test"] = Hk.hk_test
   ["mdlint"] = Extra.mdlint
+  ["nilaway"] = Extra.nilaway
   ["pkl_format"] = Hk.pkl_format
 }

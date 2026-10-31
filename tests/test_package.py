@@ -40,6 +40,10 @@ BUILTINS = {
         'steps["constable"].fix.command.argv.join(" ")',
         "constable -fix ./...",
     ),
+    "nilaway": (
+        'steps["nilaway"].check.command',
+        "nilaway -include-pkgs $(go list -m) ./...",
+    ),
 }
 
 
