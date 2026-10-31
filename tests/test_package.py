@@ -1,4 +1,4 @@
-"""Check that the packaged Pkl package resolves like a consumer's.
+"""Check the packaged Pkl package the way a consumer resolves it.
 
 Pkl fetches the package's metadata file (name@version, no extension) first,
 follows the packageZipUrl it lists, and then loads modules out of that zip.
@@ -23,6 +23,12 @@ REPO = Path(__file__).resolve().parent.parent
 # the checks redirect both at the local server.
 PACKAGE_HOST = "hk-config.test"
 GITHUB_RELEASE = "https://github.com/nnutter/hk-config/releases/download/"
+
+# One entry per builtin: the step name, and the check command a consumer must
+# end up with.
+BUILTINS = {
+    "mdlint": "mdlint check --no-fix {{files}}",
+}
 
 
 class Package:
@@ -92,10 +98,25 @@ def pkl_eval(release: str, work: Path, *args: str) -> subprocess.CompletedProces
     )
 
 
-def test_package_resolves(package: Package, release: str, tmp_path: Path) -> None:
-    """The schema pin and the builtins module both load from the packaged zip."""
+@pytest.mark.parametrize("step, expected_check", BUILTINS.items())
+def test_consumer_resolves_builtin(
+    package: Package, release: str, tmp_path: Path, step: str, expected_check: str
+) -> None:
+    """A consumer amends Config.pkl and assigns the builtin as a step."""
     uri = f"package://{PACKAGE_HOST}/{package.name}@{package.version}"
-    for module in ("Config.pkl", "Builtins.pkl"):
-        result = pkl_eval(release, tmp_path, f"{uri}#/{module}", "-f", "json")
-        assert result.returncode == 0, f"{module}: {result.stderr}"
-        assert result.stdout.strip(), f"{module} evaluated to nothing"
+    consumer = tmp_path / "hk.pkl"
+    consumer.write_text(
+        f'''amends "{uri}#/Config.pkl"
+
+import "{uri}#/Builtins.pkl" as Extra
+
+steps {{
+  ["{step}"] = Extra.{step}
+}}
+'''
+    )
+    result = pkl_eval(
+        release, tmp_path, str(consumer), "-x", f'steps["{step}"].check.command.argv.join(" ")'
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == expected_check
