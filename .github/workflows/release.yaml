@@ -24,6 +24,10 @@ concurrency:
 
 jobs:
   verify:
+    # The called workflow declares this permission, so the caller must grant it;
+    # the empty top-level permissions grant nothing on their own.
+    permissions:
+      contents: read
     uses: ./.github/workflows/ci.yaml
 
   publish:
@@ -39,7 +43,11 @@ jobs:
         with:
           ref: ${{ inputs.version != '' && format('v{0}', inputs.version) || github.ref_name }}
           persist-credentials: false
+      # No cache on a tag build: a cache entry written by an untrusted branch
+      # could otherwise reach the artifacts this job publishes.
       - uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
+        with:
+          cache: false
       # The tag names the release and the package version, so a tag that is not
       # a version must not reach the upload.
       - name: Derive the package version from the tag
