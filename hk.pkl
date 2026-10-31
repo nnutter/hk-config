@@ -11,6 +11,7 @@ import "package://github.com/jdx/hk/releases/download/v2.10.0/hk@2.10.0#/Builtin
 import "Builtins.pkl" as Extra
 
 steps {
+  ["go_check_sumtype"] = Extra.go_check_sumtype
   ["hk_test"] = Hk.hk_test
   ["mdlint"] = Extra.mdlint
   ["pkl_format"] = Hk.pkl_format

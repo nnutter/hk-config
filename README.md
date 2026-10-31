@@ -28,10 +28,14 @@ Amending hk's `Config.pkl` directly also works, but then its version must equal 
 
 | Name | Runs |
 | --- | --- |
+| `go_check_sumtype` | `go-check-sumtype -default-signifies-exhaustive=false -include-shared-interfaces ./...` on `**/*.go` |
 | `mdlint` | `mdlint format --check` and `mdlint check --no-fix` to check, `mdlint format` and `mdlint check --fix` to fix, on `**/*.md` and `**/*.markdown` |
 
-Install the tools with mise, for example:
+The Go builtins run at the `go.mod` workspace and need a Go toolchain.
+
+Install the tools with mise:
 
 ```sh
 mise use "github:nnutter/mdlint@latest"
+mise use "go:github.com/alecthomas/go-check-sumtype/cmd/go-check-sumtype@latest"
 ```

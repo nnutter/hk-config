@@ -10,3 +10,6 @@ module hk_config.Builtins
 
 /// Lints and formats Markdown with mdlint.
 mdlint = import("builtins/mdlint.pkl").mdlint
+
+/// Checks that `switch` statements over sum types cover every variant.
+go_check_sumtype = import("builtins/go_check_sumtype.pkl").go_check_sumtype

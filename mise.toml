@@ -2,6 +2,8 @@
 hk = "2.10.0"                      # keep in sync with the hk version pinned in Config.pkl
 pkl = "0.32.2"
 uv = "0.13.6"
+go = "1.27.3"
+"go:github.com/alecthomas/go-check-sumtype/cmd/go-check-sumtype" = "0.5.0"
 "github:nnutter/mdlint" = "0.4.2"
 
 [tasks.setup]

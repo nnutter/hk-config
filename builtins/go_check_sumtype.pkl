@@ -1,0 +1,83 @@
+import "../Config.pkl" as Config
+
+/// Checks that `switch` statements over sum types cover every variant.
+///
+/// A sum type is an interface with an unexported method, marked with
+/// `//sumtype:decl`. The flags are the ones this repository uses: a `default`
+/// clause alone does not count as coverage, and switches may be exhaustive by
+/// the interfaces the variants implement.
+go_check_sumtype = new Config.Step {
+  glob = List("**/*.go")
+  workspace_indicator = "go.mod"
+  dir = "{{workspace}}"
+  check = new Config.CommandSpec {
+    command = new Config.Command {
+      argv =
+        List(
+          "go-check-sumtype",
+          "-default-signifies-exhaustive=false",
+          "-include-shared-interfaces",
+          "./...",
+        )
+    }
+    effect = "read"
+  }
+  // The tool prints `path:line:column: message`.
+  diagnostic_format = "gcc"
+  tests {
+    local const missingVariant =
+      """
+      package main
+
+      //sumtype:decl
+      type Shape interface{ shape() }
+
+      type Circle struct{}
+
+      func (*Circle) shape() {}
+
+      type Square struct{}
+
+      func (*Square) shape() {}
+
+      func main() {
+      \tswitch Shape(nil).(type) {
+      \tcase *Circle:
+      \t}
+      }
+      """
+    local const exhaustive =
+      """
+      package main
+
+      //sumtype:decl
+      type Shape interface{ shape() }
+
+      type Circle struct{}
+
+      func (*Circle) shape() {}
+
+      type Square struct{}
+
+      func (*Square) shape() {}
+
+      func main() {
+      \tswitch Shape(nil).(type) {
+      \tcase *Circle:
+      \tcase *Square:
+      \t}
+      }
+      """
+    // The analyzer driver exits 3, not 1, when it reports a diagnostic.
+    ["check missing variant"] = new Config.StepTest {
+      tmpdir = true
+      write { ["go.mod"] = "module example.com/test\n\ngo 1.21\n"; ["main.go"] = missingVariant }
+      expect { code = 3 }
+    }
+    ["check all variants"] = new Config.StepTest {
+      tmpdir = true
+      write { ["go.mod"] = "module example.com/test\n\ngo 1.21\n"; ["main.go"] = exhaustive }
+      expect { code = 0 }
+    }
+  }
+}
