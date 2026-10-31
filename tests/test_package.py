@@ -36,6 +36,10 @@ BUILTINS = {
         'steps["go_check_sumtype"].check.command.argv.join(" ")',
         "go-check-sumtype -default-signifies-exhaustive=false -include-shared-interfaces ./...",
     ),
+    "constable": (
+        'steps["constable"].fix.command.argv.join(" ")',
+        "constable -fix ./...",
+    ),
 }
 
 
