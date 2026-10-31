@@ -2,18 +2,19 @@ import "../Config.pkl" as Config
 
 /// Lints and formats Markdown with mdlint.
 ///
-/// `check` is the superset: it reports every rule, including the formatting
-/// ones `format` rewrites. `--no-fix` keeps the check read-only even when the
-/// project's mdlint config would apply fixes, and `format` is the fix.
+/// `mdlint check` reports lint rules but not the formatting that
+/// `mdlint format` rewrites, so the step runs both: `format --check` catches
+/// formatting drift, and `check --no-fix` catches the rules. `--no-fix` keeps
+/// the check read-only even when the project's mdlint config would apply fixes.
 mdlint = new Config.Step {
   glob = List("**/*.md", "**/*.markdown")
   batch = true
   check = new Config.CommandSpec {
-    command = new Config.Command { argv = List("mdlint", "check", "--no-fix", "{{files}}") }
+    command = "mdlint format --check {{files}} && mdlint check --no-fix {{files}}"
     effect = "read"
   }
   fix = new Config.CommandSpec {
-    command = new Config.Command { argv = List("mdlint", "format", "{{files}}") }
+    command = "mdlint format {{files}} && mdlint check --fix {{files}}"
     effect = "write"
   }
   tests {

@@ -24,10 +24,14 @@ REPO = Path(__file__).resolve().parent.parent
 PACKAGE_HOST = "hk-config.test"
 GITHUB_RELEASE = "https://github.com/nnutter/hk-config/releases/download/"
 
-# One entry per builtin: the step name, and the check command a consumer must
-# end up with.
+# One entry per builtin: the Pkl expression for the command a consumer must end
+# up with, and that command. String commands and Command objects read back
+# differently, so each entry spells out its own expression.
 BUILTINS = {
-    "mdlint": "mdlint check --no-fix {{files}}",
+    "mdlint": (
+        'steps["mdlint"].check.command',
+        "mdlint format --check {{files}} && mdlint check --no-fix {{files}}",
+    ),
 }
 
 
@@ -98,11 +102,23 @@ def pkl_eval(release: str, work: Path, *args: str) -> subprocess.CompletedProces
     )
 
 
-@pytest.mark.parametrize("step, expected_check", BUILTINS.items())
+@pytest.mark.parametrize(
+    ("step", "expression", "expected_command"),
+    [(name, *spec) for name, spec in BUILTINS.items()],
+)
 def test_consumer_resolves_builtin(
-    package: Package, release: str, tmp_path: Path, step: str, expected_check: str
+    package: Package,
+    release: str,
+    tmp_path: Path,
+    step: str,
+    expression: str,
+    expected_command: str,
 ) -> None:
-    """A consumer amends Config.pkl and assigns the builtin as a step."""
+    """A consumer amends Config.pkl and assigns the builtin as a step.
+
+    The step goes into `steps` only to read its command back; a commit-message
+    step belongs in another hook, which this test does not exercise.
+    """
     uri = f"package://{PACKAGE_HOST}/{package.name}@{package.version}"
     consumer = tmp_path / "hk.pkl"
     consumer.write_text(
@@ -115,8 +131,6 @@ steps {{
 }}
 '''
     )
-    result = pkl_eval(
-        release, tmp_path, str(consumer), "-x", f'steps["{step}"].check.command.argv.join(" ")'
-    )
+    result = pkl_eval(release, tmp_path, str(consumer), "-x", expression)
     assert result.returncode == 0, result.stderr
-    assert result.stdout.strip() == expected_check
+    assert result.stdout.strip() == expected_command

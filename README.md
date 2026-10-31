@@ -26,9 +26,9 @@ Amending hk's `Config.pkl` directly also works, but then its version must equal 
 
 ## Builtins
 
-| Name     | Runs                                                                                          |
-| -------- | --------------------------------------------------------------------------------------------- |
-| `mdlint` | `mdlint check --no-fix` to check, `mdlint format` to fix, on `**/*.md` and `**/*.markdown` |
+| Name | Runs |
+| --- | --- |
+| `mdlint` | `mdlint format --check` and `mdlint check --no-fix` to check, `mdlint format` and `mdlint check --fix` to fix, on `**/*.md` and `**/*.markdown` |
 
 Install the tools with mise, for example:
 
