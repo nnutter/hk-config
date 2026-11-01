@@ -33,6 +33,7 @@ Amending hk's `Config.pkl` directly also works, but then its version must equal 
 | `gohawk` | `gohawk ./...` on `**/*.go` |
 | `mdlint` | `mdlint format --check` and `mdlint check --no-fix` to check, `mdlint format` and `mdlint check --fix` to fix, on `**/*.md` and `**/*.markdown` |
 | `nilaway` | `nilaway -include-pkgs $(go list -m) ./...` on `**/*.go` |
+| `testifylint` | `testifylint ./...` to check, `testifylint -fix ./...` to fix, on `**/*.go` |
 | `timber_commit_msg` | `timber review commit-msg` in a `commit-msg` hook |
 
 The Go builtins run at the `go.mod` workspace and need a Go toolchain.
@@ -42,6 +43,7 @@ Install the tools with mise:
 ```sh
 mise use "github:nnutter/mdlint@latest"
 mise use "go:github.com/alecthomas/go-check-sumtype/cmd/go-check-sumtype@latest"
+mise use "go:github.com/Antonboom/testifylint@latest"
 mise use "go:github.com/kojah/gohawk@latest"
 mise use "go:github.com/nnutter/constable/cmd/constable@latest"
 mise use "go:github.com/nnutter/timber@latest"
