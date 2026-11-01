@@ -13,6 +13,7 @@ import "Builtins.pkl" as Extra
 steps {
   ["constable"] = Extra.constable
   ["go_check_sumtype"] = Extra.go_check_sumtype
+  ["gohawk"] = Extra.gohawk
   ["hk_test"] = Hk.hk_test
   ["jactionlint"] = Hk.jactionlint
   ["mdlint"] = Extra.mdlint

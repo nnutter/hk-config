@@ -20,5 +20,8 @@ constable = import("builtins/constable.pkl").constable
 /// Detects potential nil panics with nilaway.
 nilaway = import("builtins/nilaway.pkl").nilaway
 
+/// Finds resource-lifetime and concurrency bugs with gohawk.
+gohawk = import("builtins/gohawk.pkl").gohawk
+
 /// Adds a Gerrit-compatible Change-Id to a commit message.
 timber_commit_msg = import("builtins/timber_commit_msg.pkl").timber_commit_msg

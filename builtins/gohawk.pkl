@@ -1,0 +1,69 @@
+import "../Config.pkl" as Config
+
+/// Finds resource-lifetime and concurrency bugs with gohawk.
+///
+/// gohawk runs its core tier by default: the checks that earned their place
+/// on audit and precision replay. Higher tiers need `-tier=experimental` or
+/// `-enable-all`, so a finding this step reports is one the tool trusts.
+///
+/// gohawk is diagnostic-only: it rejects `-fix` and `-diff`, so the step has
+/// no fix command. Its output is a multi-line explanation with a source frame,
+/// and hk would read the frame as message text, so the step does not claim gcc
+/// diagnostics.
+gohawk = new Config.Step {
+  glob = List("**/*.go")
+  workspace_indicator = "go.mod"
+  dir = "{{workspace}}"
+  check = new Config.CommandSpec {
+    command = new Config.Command { argv = List("gohawk", "./...") }
+    effect = "read"
+  }
+  tests {
+    local const missesCancel =
+      """
+      package main
+
+      import "context"
+
+      func work(ctx context.Context) {
+      \t_, cancel := context.WithCancel(ctx)
+      \t_ = cancel
+      }
+
+      func main() {
+      \twork(context.Background())
+      }
+      """
+    local const callsCancel =
+      """
+      package main
+
+      import "context"
+
+      func work(ctx context.Context) {
+      \t_, cancel := context.WithCancel(ctx)
+      \tdefer cancel()
+      }
+
+      func main() {
+      \twork(context.Background())
+      }
+      """
+    ["check missed cancel"] = new Config.StepTest {
+      tmpdir = true
+      write {
+        ["go.mod"] = "module example.com/test\n\ngo 1.21\n"
+        ["main.go"] = missesCancel
+      }
+      expect { code = 3 }
+    }
+    ["check called cancel"] = new Config.StepTest {
+      tmpdir = true
+      write {
+        ["go.mod"] = "module example.com/test\n\ngo 1.21\n"
+        ["main.go"] = callsCancel
+      }
+      expect { code = 0 }
+    }
+  }
+}
