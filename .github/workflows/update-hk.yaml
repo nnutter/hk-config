@@ -2,8 +2,8 @@ name: update-hk
 
 # The package pins exactly one hk version, so follow upstream instead of
 # waiting for someone to notice. Update the pin, let the pull request checks
-# decide, and only then tag and release: the tag is hk's tag, because the
-# package version tracks the hk release it targets.
+# decide, and only then tag and release: scripts/update-hk names the package
+# version to tag, which is the hk version plus the next revision.
 on:
   schedule:
     - cron: "23 6 * * *"
@@ -27,6 +27,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: master
+          # scripts/update-hk counts the release tags of an hk version, and a
+          # shallow clone carries no tags.
+          fetch-depth: 0
           persist-credentials: false
       - uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
       - name: Find the latest hk release
@@ -46,20 +49,24 @@ jobs:
         if: steps.hk.outputs.version == steps.pinned.outputs.version
         run: echo "hk ${{ steps.pinned.outputs.version }} is already pinned"
       - name: Update the pin
+        id: package
         if: steps.hk.outputs.version != steps.pinned.outputs.version
-        run: scripts/update-hk "${{ steps.hk.outputs.version }}"
+        run: |
+          version=$(scripts/update-hk "${{ steps.hk.outputs.version }}")
+          echo "version=$version" >>"$GITHUB_OUTPUT"
       - name: Open the pull request with auto-merge
         id: pr
-        if: steps.hk.outputs.version != steps.pinned.outputs.version
+        if: steps.package.outputs.version != ''
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ steps.hk.outputs.version }}
+          HK_VERSION: ${{ steps.hk.outputs.version }}
+          VERSION: ${{ steps.package.outputs.version }}
         run: |
           branch=update-hk
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -B "$branch"
-          git commit -am "Update hk to v$VERSION"
+          git commit -am "Update hk to v$HK_VERSION"
           git push --force \
             "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY.git" \
             "HEAD:refs/heads/$branch"
@@ -70,17 +77,17 @@ jobs:
             gh pr create \
               --base master \
               --head "$branch" \
-              --title "Update hk to v$VERSION" \
-              --body "hk v$VERSION is the latest release. This updates the schema pin, the builtins import, the hk tool pin, and the documented package version. Auto-merge is on; when it merges, this workflow tags the package v$VERSION and starts the release."
+              --title "Update hk to v$HK_VERSION" \
+              --body "hk v$HK_VERSION is the latest release. This updates the schema pin, the builtins import, and the hk tool pin. Auto-merge is on; when it merges, this workflow tags the package v$VERSION and starts the release."
             pr=$(gh pr list --head "$branch" --state open --json number --jq '.[0].number')
           fi
           gh pr merge "$pr" --auto --squash --delete-branch
           echo "number=$pr" >>"$GITHUB_OUTPUT"
       - name: Tag the merge and start the release
-        if: steps.hk.outputs.version != steps.pinned.outputs.version
+        if: steps.package.outputs.version != ''
         env:
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ steps.hk.outputs.version }}
+          VERSION: ${{ steps.package.outputs.version }}
           PR: ${{ steps.pr.outputs.number }}
         run: |
           # Auto-merge waits for the pull request checks. Hold this job until
