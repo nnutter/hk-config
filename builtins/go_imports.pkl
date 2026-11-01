@@ -1,0 +1,100 @@
+import "package://github.com/jdx/hk/releases/download/v2.10.0/hk@2.10.0#/Builtins.pkl" as Hk
+
+import "../Config.pkl" as Config
+
+/// Groups imports with goimports, including this module's own packages.
+///
+/// hk's builtin runs `goimports` without `-local`, so a third-party import and
+/// a package from this module stay in one group. Every command passes
+/// `-local "$(go list -m)"`, which gives this module's packages their own group.
+go_imports: Config.Step = (Hk.go_imports) {
+  check_list_files {
+    command =
+      """
+      FILES=$(goimports -local "$(go list -m)" -l {{files}})
+      if [ -n "$FILES" ]; then
+      echo "$FILES"
+      exit 1
+      fi
+      """
+  }
+  check_diff {
+    command =
+      """
+      DIFF=$(goimports -local "$(go list -m)" -d {{files}})
+      if [ -n "$DIFF" ]; then
+      echo "$DIFF"
+      exit 1
+      fi
+      """
+  }
+  fix {
+    command = #"goimports -local "$(go list -m)" -w {{files}}"#
+  }
+  tests = new Mapping<String, Config.StepTest> {
+    local const ungrouped =
+      """
+      package main
+
+      import (
+      \t"fmt"
+
+      \t"example.com/other"
+      \t"example.com/test/internal"
+      )
+
+      func main() {
+      \tfmt.Println(other.X, internal.X)
+      }
+      """ + "\n"
+    local const grouped =
+      """
+      package main
+
+      import (
+      \t"fmt"
+
+      \t"example.com/other"
+
+      \t"example.com/test/internal"
+      )
+
+      func main() {
+      \tfmt.Println(other.X, internal.X)
+      }
+      """ + "\n"
+    ["check ungrouped imports"] = new Config.StepTest {
+      tmpdir = true
+      files = List("main.go")
+      write {
+        ["go.mod"] = "module example.com/test\n\ngo 1.21\n"
+        ["main.go"] = ungrouped
+      }
+      expect { code = 1 }
+    }
+    ["check grouped imports"] = new Config.StepTest {
+      tmpdir = true
+      files = List("main.go")
+      write {
+        ["go.mod"] = "module example.com/test\n\ngo 1.21\n"
+        ["main.go"] = grouped
+      }
+      expect { code = 0 }
+    }
+    ["fix ungrouped imports"] = new Config.StepTest {
+      run = "fix"
+      tmpdir = true
+      files = List("main.go")
+      write {
+        ["go.mod"] = "module example.com/test\n\ngo 1.21\n"
+        ["main.go"] = ungrouped
+      }
+      expect {
+        code = 0
+        files {
+          ["main.go"] = grouped
+        }
+      }
+    }
+  }
+}

@@ -14,6 +14,9 @@ mdlint = import("builtins/mdlint.pkl").mdlint
 /// Checks that `switch` statements over sum types cover every variant.
 go_check_sumtype = import("builtins/go_check_sumtype.pkl").go_check_sumtype
 
+/// Groups imports with goimports, including this module's own packages.
+go_imports = import("builtins/go_imports.pkl").go_imports
+
 /// Lints Go code with constable: non-mutating contracts, complexity, and predicates.
 constable = import("builtins/constable.pkl").constable
 

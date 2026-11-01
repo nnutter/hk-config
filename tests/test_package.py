@@ -37,6 +37,21 @@ BUILTINS = {
         'steps["go_check_sumtype"].check.command.argv.join(" ")',
         "go-check-sumtype -default-signifies-exhaustive=false -include-shared-interfaces ./...",
     ),
+    "go_imports": (
+        'List(steps["go_imports"].check_list_files.command, steps["go_imports"].check_diff.command, steps["go_imports"].fix.command).join("\\n")',
+        """\
+FILES=$(goimports -local "$(go list -m)" -l {{files}})
+if [ -n "$FILES" ]; then
+echo "$FILES"
+exit 1
+fi
+DIFF=$(goimports -local "$(go list -m)" -d {{files}})
+if [ -n "$DIFF" ]; then
+echo "$DIFF"
+exit 1
+fi
+goimports -local "$(go list -m)" -w {{files}}""",
+    ),
     "constable": (
         'steps["constable"].fix.command.argv.join(" ")',
         "constable -fix ./...",
