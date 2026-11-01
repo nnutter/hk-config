@@ -2,19 +2,26 @@
 # /// script
 # requires-python = ">=3.9"
 # ///
-"""Point this package at a different hk release.
+"""Point this package at an hk release, and name the version to publish.
 
 The hk version lives in three places: the schema pin in Config.pkl, the hk
-builtins import in hk.pkl, and the hk tool pin in mise.toml. The README spells
-the version as <hk-version> because the package version tracks hk's: a tag
-names both the hk release this package targets and the release of the package
-itself.
+builtins import in hk.pkl, and the hk tool pin in mise.toml.
 
-Usage: scripts/update-hk <version>   (without the leading v)
+The package version is that hk version plus a revision, such as `2.10.0-1`,
+because builtins land more often than hk releases do. The release tags are the
+ledger: the version to publish next for an hk version is one more than that
+version's highest `v<hk-version>-<revision>` tag, and `-0` when it has none.
+
+Usage: scripts/update-hk [<version>]   (without the leading v)
+
+Without a version the script keeps the pin and only names the version to
+publish, which is how a revision gets released. Standard output carries that
+version alone, so a caller can capture it in a command substitution.
 """
 from __future__ import annotations
 
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -38,33 +45,68 @@ def replace(path: Path, old: str, new: str) -> None:
     path.write_text(text.replace(old, new))
 
 
-def main() -> None:
-    if len(sys.argv) != 2:
-        raise SystemExit("usage: scripts/update-hk <version>")
-    version = sys.argv[1]
-    if not version_pattern.fullmatch(version):
-        raise SystemExit(f"not a version: {version}")
-
-    config = repo / "Config.pkl"
+def pinned_version(config: Path) -> str:
+    """The hk version the schema pin in Config.pkl names."""
     match = pinned.search(config.read_text())
     if match is None:
         raise SystemExit("cannot read the hk version from Config.pkl")
-    old = match["version"]
-    if old == version:
-        print(f"already pinned to hk {version}")
-        return
+    return match["version"]
 
-    replace(config, hk_uri(old), hk_uri(version))
-    replace(repo / "hk.pkl", hk_uri(old), hk_uri(version))
-    replace(repo / "mise.toml", f'hk = "{old}"', f'hk = "{version}"')
 
-    # A leftover reference would pin part of the package to an hk release it no
-    # longer targets.
-    for path in (config, repo / "hk.pkl", repo / "mise.toml"):
-        if old in path.read_text():
-            raise SystemExit(f"{path.name} still references hk {old}")
+def released_revisions(version: str) -> list[int]:
+    """The revision of every release tag published for an hk version."""
+    result = subprocess.run(
+        ["git", "tag", "--list", f"v{version}-*"],
+        cwd=repo,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        raise SystemExit(f"git tag: {result.stderr.strip()}")
+    prefix = f"v{version}-"
+    # An hk prerelease shares the base version's tags, and its revision carries
+    # letters, so only a bare integer counts as a revision.
+    return [
+        int(tag[len(prefix) :])
+        for tag in result.stdout.split()
+        if tag[len(prefix) :].isdigit()
+    ]
 
-    print(f"hk {old} -> {version}")
+
+def next_package_version(version: str) -> str:
+    """The version to publish next against an hk version."""
+    return f"{version}-{max(released_revisions(version), default=-1) + 1}"
+
+
+def log(message: str) -> None:
+    """Report progress on stderr, which leaves stdout to the version."""
+    print(message, file=sys.stderr)
+
+
+def main() -> None:
+    if len(sys.argv) > 2:
+        raise SystemExit("usage: scripts/update-hk [<version>]")
+    config = repo / "Config.pkl"
+    old = pinned_version(config)
+    version = sys.argv[1] if len(sys.argv) == 2 else old
+    if not version_pattern.fullmatch(version):
+        raise SystemExit(f"not a version: {version}")
+
+    if version != old:
+        replace(config, hk_uri(old), hk_uri(version))
+        replace(repo / "hk.pkl", hk_uri(old), hk_uri(version))
+        replace(repo / "mise.toml", f'hk = "{old}"', f'hk = "{version}"')
+
+        # A leftover reference would pin part of the package to an hk release it
+        # no longer targets.
+        for path in (config, repo / "hk.pkl", repo / "mise.toml"):
+            if old in path.read_text():
+                raise SystemExit(f"{path.name} still references hk {old}")
+
+        log(f"hk {old} -> {version}")
+
+    print(next_package_version(version))
 
 
 if __name__ == "__main__":

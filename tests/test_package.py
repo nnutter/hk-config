@@ -37,9 +37,40 @@ BUILTINS = {
         'steps["go_check_sumtype"].check.command.argv.join(" ")',
         "go-check-sumtype -default-signifies-exhaustive=false -include-shared-interfaces ./...",
     ),
+    "go_imports": (
+        'List(steps["go_imports"].check_list_files.command, steps["go_imports"].check_diff.command, steps["go_imports"].fix.command).join("\\n")',
+        """\
+FILES=$(goimports -local "$(go list -m)" -l {{files}})
+if [ -n "$FILES" ]; then
+echo "$FILES"
+exit 1
+fi
+DIFF=$(goimports -local "$(go list -m)" -d {{files}})
+if [ -n "$DIFF" ]; then
+echo "$DIFF"
+exit 1
+fi
+goimports -local "$(go list -m)" -w {{files}}""",
+    ),
     "constable": (
         'steps["constable"].fix.command.argv.join(" ")',
         "constable -fix ./...",
+    ),
+    "go_fix": (
+        'if (steps["go_fix"].fix == null) steps["go_fix"].check_diff.command else "has-fix"',
+        "go fix -diff ./...",
+    ),
+    "go_sec": (
+        'steps["go_sec"].check.command',
+        "gosec -severity high -quiet ./...",
+    ),
+    "gomod_tidy": (
+        'if (steps["gomod_tidy"].fix == null && steps["gomod_tidy"].stage == null) steps["gomod_tidy"].check_diff.command else "has-fix"',
+        "go mod tidy -diff",
+    ),
+    "gohawk": (
+        'steps["gohawk"].check.command.argv.join(" ")',
+        "gohawk ./...",
     ),
     "nilaway": (
         'steps["nilaway"].check.command',

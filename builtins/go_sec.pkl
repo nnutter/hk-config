@@ -1,0 +1,52 @@
+import "package://github.com/jdx/hk/releases/download/v2.10.0/hk@2.10.0#/Builtins.pkl" as Hk
+
+import "../Config.pkl" as Config
+
+/// Scans Go code for high-severity security problems with gosec.
+///
+/// hk's builtin runs `gosec ./...`, which also reports medium and low
+/// findings. This wrapper reports only high-severity findings and hides the
+/// progress log.
+go_sec: Config.Step = (Hk.go_sec) {
+  check {
+    command = "gosec -severity high -quiet ./..."
+  }
+  tests {
+    local const skipsVerify =
+      """
+      package main
+
+      import "crypto/tls"
+
+      func main() {
+      \t_ = &tls.Config{InsecureSkipVerify: true}
+      }
+      """
+    local const verifies =
+      """
+      package main
+
+      import "crypto/tls"
+
+      func main() {
+      \t_ = &tls.Config{}
+      }
+      """
+    ["check skipped verify"] = new Config.StepTest {
+      tmpdir = true
+      write {
+        ["go.mod"] = "module example.com/test\n\ngo 1.21\n"
+        ["main.go"] = skipsVerify
+      }
+      expect { code = 1 }
+    }
+    ["check default verify"] = new Config.StepTest {
+      tmpdir = true
+      write {
+        ["go.mod"] = "module example.com/test\n\ngo 1.21\n"
+        ["main.go"] = verifies
+      }
+      expect { code = 0 }
+    }
+  }
+}
