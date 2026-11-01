@@ -1,0 +1,20 @@
+import "package://github.com/jdx/hk/releases/download/v2.10.0/hk@2.10.0#/Builtins.pkl" as Hk
+
+import "../Config.pkl" as Config
+
+/// Checks `go fix` without rewriting the module.
+///
+/// hk's builtin fixes with `go fix ./...`. A scoped fix then rewrites the
+/// whole module, not only the selected files. This wrapper keeps the `-diff`
+/// check and has no fix command.
+go_fix: Config.Step = (Hk.go_fix) {
+  fix = null
+  // The stock fix tests expect `go fix ./...` to rewrite the module.
+  tests = new Mapping<String, Config.StepTest> {
+    for (name, test in Hk.go_fix.tests) {
+      when (test.run != "fix") {
+        [name] = test
+      }
+    }
+  }
+}

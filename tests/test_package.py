@@ -56,9 +56,17 @@ goimports -local "$(go list -m)" -w {{files}}""",
         'steps["constable"].fix.command.argv.join(" ")',
         "constable -fix ./...",
     ),
+    "go_fix": (
+        'if (steps["go_fix"].fix == null) steps["go_fix"].check_diff.command else "has-fix"',
+        "go fix -diff ./...",
+    ),
     "go_sec": (
         'steps["go_sec"].check.command',
         "gosec -severity high -quiet ./...",
+    ),
+    "gomod_tidy": (
+        'if (steps["gomod_tidy"].fix == null && steps["gomod_tidy"].stage == null) steps["gomod_tidy"].check_diff.command else "has-fix"',
+        "go mod tidy -diff",
     ),
     "gohawk": (
         'steps["gohawk"].check.command.argv.join(" ")',
