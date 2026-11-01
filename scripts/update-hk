@@ -38,6 +38,14 @@ def replace(path: Path, old: str, new: str) -> None:
     path.write_text(text.replace(old, new))
 
 
+def pinned_version(config: Path) -> str:
+    """The hk version the schema pin in Config.pkl names."""
+    match = pinned.search(config.read_text())
+    if match is None:
+        raise SystemExit("cannot read the hk version from Config.pkl")
+    return match["version"]
+
+
 def main() -> None:
     if len(sys.argv) != 2:
         raise SystemExit("usage: scripts/update-hk <version>")
@@ -46,10 +54,7 @@ def main() -> None:
         raise SystemExit(f"not a version: {version}")
 
     config = repo / "Config.pkl"
-    match = pinned.search(config.read_text())
-    if match is None:
-        raise SystemExit("cannot read the hk version from Config.pkl")
-    old = match["version"]
+    old = pinned_version(config)
     if old == version:
         print(f"already pinned to hk {version}")
         return
