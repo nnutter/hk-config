@@ -29,9 +29,6 @@ constable = import("builtins/constable.pkl").constable
 /// Detects potential nil panics with nilaway.
 nilaway = import("builtins/nilaway.pkl").nilaway
 
-/// Lints testify assertions with testifylint.
-testifylint = import("builtins/testifylint.pkl").testifylint
-
 /// Finds resource-lifetime and concurrency bugs with gohawk.
 gohawk = import("builtins/gohawk.pkl").gohawk
 
