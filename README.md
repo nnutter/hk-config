@@ -31,6 +31,7 @@ Amending hk's `Config.pkl` directly also works, but then its version must equal 
 | `constable` | `constable ./...` to check, `constable -fix ./...` to fix, on `**/*.go` |
 | `go_check_sumtype` | `go-check-sumtype -default-signifies-exhaustive=false -include-shared-interfaces ./...` on `**/*.go` |
 | `go_imports` | `goimports -local "$(go list -m)" -l` and `-d` to check, `-w` to fix, on `**/*.go` |
+| `go_sec` | `gosec -severity high -quiet ./...` on `**/*.go` |
 | `gohawk` | `gohawk ./...` on `**/*.go` |
 | `mdlint` | `mdlint format --check` and `mdlint check --no-fix` to check, `mdlint format` and `mdlint check --fix` to fix, on `**/*.md` and `**/*.markdown` |
 | `nilaway` | `nilaway -include-pkgs $(go list -m) ./...` on `**/*.go` |
@@ -47,6 +48,7 @@ mise use "go:github.com/alecthomas/go-check-sumtype/cmd/go-check-sumtype@latest"
 mise use "go:github.com/Antonboom/testifylint@latest"
 mise use "go:github.com/kojah/gohawk@latest"
 mise use "go:github.com/nnutter/constable/cmd/constable@latest"
+mise use "go:github.com/securego/gosec/v2/cmd/gosec@latest"
 mise use "go:github.com/nnutter/timber@latest"
 mise use "go:golang.org/x/tools/cmd/goimports@latest"
 mise use "go:go.uber.org/nilaway/cmd/nilaway@latest"

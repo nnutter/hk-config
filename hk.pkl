@@ -14,6 +14,7 @@ steps {
   ["constable"] = Extra.constable
   ["go_check_sumtype"] = Extra.go_check_sumtype
   ["go_imports"] = Extra.go_imports
+  ["go_sec"] = Extra.go_sec
   ["gohawk"] = Extra.gohawk
   ["hk_test"] = Hk.hk_test
   ["jactionlint"] = Hk.jactionlint

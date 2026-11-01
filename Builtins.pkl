@@ -17,6 +17,9 @@ go_check_sumtype = import("builtins/go_check_sumtype.pkl").go_check_sumtype
 /// Groups imports with goimports, including this module's own packages.
 go_imports = import("builtins/go_imports.pkl").go_imports
 
+/// Scans Go code for high-severity security problems with gosec.
+go_sec = import("builtins/go_sec.pkl").go_sec
+
 /// Lints Go code with constable: non-mutating contracts, complexity, and predicates.
 constable = import("builtins/constable.pkl").constable
 

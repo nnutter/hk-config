@@ -56,6 +56,10 @@ goimports -local "$(go list -m)" -w {{files}}""",
         'steps["constable"].fix.command.argv.join(" ")',
         "constable -fix ./...",
     ),
+    "go_sec": (
+        'steps["go_sec"].check.command',
+        "gosec -severity high -quiet ./...",
+    ),
     "gohawk": (
         'steps["gohawk"].check.command.argv.join(" ")',
         "gohawk ./...",
