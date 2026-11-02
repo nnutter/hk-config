@@ -21,6 +21,7 @@ steps {
   ["mdlint"] = Extra.mdlint
   ["nilaway"] = Extra.nilaway
   ["testifylint"] = Extra.testifylint
+  ["skills_ref"] = Extra.skills_ref
   ["pkl"] = (Hk.pkl) { depends = List("pkl_format") }
   ["pkl_format"] = Hk.pkl_format
   ["ruff"] = (Hk.ruff) { depends = List("ruff_format") }
