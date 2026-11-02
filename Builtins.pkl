@@ -14,9 +14,6 @@ mdlint = import("builtins/mdlint.pkl").mdlint
 /// Checks that `switch` statements over sum types cover every variant.
 go_check_sumtype = import("builtins/go_check_sumtype.pkl").go_check_sumtype
 
-/// Checks `go fix` without rewriting the module.
-go_fix = import("builtins/go_fix.pkl").go_fix
-
 /// Groups imports with goimports, including this module's own packages.
 go_imports = import("builtins/go_imports.pkl").go_imports
 
@@ -34,9 +31,6 @@ testifylint = import("builtins/testifylint.pkl").testifylint
 
 /// Finds resource-lifetime and concurrency bugs with gohawk.
 gohawk = import("builtins/gohawk.pkl").gohawk
-
-/// Checks `go mod tidy` without rewriting the module.
-gomod_tidy = import("builtins/gomod_tidy.pkl").gomod_tidy
 
 /// Adds a Gerrit-compatible Change-Id to a commit message.
 timber_commit_msg = import("builtins/timber_commit_msg.pkl").timber_commit_msg

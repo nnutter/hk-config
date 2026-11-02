@@ -31,11 +31,9 @@ Amending hk's `Config.pkl` directly also works, but then its version must equal 
 | --- | --- |
 | `constable` | `constable ./...` to check, `constable -fix ./...` to fix, on `**/*.go` |
 | `go_check_sumtype` | `go-check-sumtype -default-signifies-exhaustive=false -include-shared-interfaces ./...` on `**/*.go` |
-| `go_fix` | `go fix -diff ./...` to check, no fix, on `**/*.go` |
 | `go_imports` | `goimports -local "$(go list -m)" -l` and `-d` to check, `-w` to fix, on `**/*.go` |
 | `go_sec` | `gosec -severity high -quiet ./...` on `**/*.go` |
 | `gohawk` | `gohawk ./...` on `**/*.go` |
-| `gomod_tidy` | `go mod tidy -diff` to check, no fix, on `**/*.go`, `**/go.mod`, and `**/go.sum` |
 | `mdlint` | `mdlint format --check` and `mdlint check --no-fix` to check, `mdlint format` and `mdlint check --fix` to fix, on `**/*.md` and `**/*.markdown` |
 | `nilaway` | `nilaway -include-pkgs $(go list -m) ./...` on `**/*.go` |
 | `testifylint` | `testifylint ./...` to check, `testifylint -fix ./...` to fix, on `**/*.go` |
