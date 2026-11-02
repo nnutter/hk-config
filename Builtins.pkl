@@ -32,5 +32,8 @@ testifylint = import("builtins/testifylint.pkl").testifylint
 /// Finds resource-lifetime and concurrency bugs with gohawk.
 gohawk = import("builtins/gohawk.pkl").gohawk
 
+/// Validates agent skill frontmatter with skills-ref.
+skills_ref = import("builtins/skills_ref.pkl").skills_ref
+
 /// Adds a Gerrit-compatible Change-Id to a commit message.
 timber_commit_msg = import("builtins/timber_commit_msg.pkl").timber_commit_msg

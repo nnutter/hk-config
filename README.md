@@ -36,6 +36,7 @@ Amending hk's `Config.pkl` directly also works, but then its version must equal 
 | `gohawk` | `gohawk ./...` on `**/*.go` |
 | `mdlint` | `mdlint format --check` and `mdlint check --no-fix` to check, `mdlint format` and `mdlint check --fix` to fix, on `**/*.md` and `**/*.markdown` |
 | `nilaway` | `nilaway -include-pkgs $(go list -m) ./...` on `**/*.go` |
+| `skills_ref` | `agentskills validate` on each `**/SKILL.md`, no fix |
 | `testifylint` | `testifylint ./...` to check, `testifylint -fix ./...` to fix, on `**/*.go` |
 | `timber_commit_msg` | `timber review commit-msg` in a `commit-msg` hook |
 
@@ -53,6 +54,7 @@ mise use "go:github.com/nnutter/timber@latest"
 mise use "go:github.com/nnutter/testifylint@0.0.0-20261101203540-577bf922d916"
 mise use "go:golang.org/x/tools/cmd/goimports@latest"
 mise use "go:go.uber.org/nilaway/cmd/nilaway@latest"
+mise use "pypi:agentskills-tools@latest"
 mise use go@latest
 ```
 

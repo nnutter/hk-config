@@ -68,6 +68,15 @@ goimports -local "$(go list -m)" -w {{files}}""",
         'steps["nilaway"].check.command',
         "nilaway -include-pkgs $(go list -m) ./...",
     ),
+    "skills_ref": (
+        'steps["skills_ref"].check.command',
+        """\
+status=0
+for file in {{files}}; do
+agentskills validate "$(dirname "$file")" || status=1
+done
+exit $status""",
+    ),
     "timber_commit_msg": (
         'steps["timber_commit_msg"].fix.command.argv.join(" ")',
         "timber review commit-msg {{commit_msg_file}}",

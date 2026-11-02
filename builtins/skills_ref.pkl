@@ -1,0 +1,84 @@
+import "../Config.pkl" as Config
+
+/// Validates agent skill frontmatter with agentskills-tools.
+///
+/// `validate` takes one skill directory, not the SKILL.md path that hk selects,
+/// so the check validates the directory of each selected file. Passing both a
+/// file and a second path in one call is a usage error. There is no fix
+/// command: a skill is corrected in its frontmatter, which no automatic
+/// rewrite can supply.
+skills_ref = new Config.Step {
+  glob = List("**/SKILL.md")
+  check = new Config.CommandSpec {
+    command =
+      """
+      status=0
+      for file in {{files}}; do
+      agentskills validate "$(dirname "$file")" || status=1
+      done
+      exit $status
+      """
+    effect = "read"
+  }
+  tests {
+    local const validSkill =
+      """
+      ---
+      name: foo
+      description: Checks something worth checking.
+      ---
+
+      # Foo
+      """
+    local const invalidName =
+      """
+      ---
+      name: Foo
+      description: Checks something worth checking.
+      ---
+
+      # Foo
+      """
+    local const validSkillUnderBar =
+      """
+      ---
+      name: bar
+      description: Checks something else.
+      ---
+
+      # Bar
+      """
+    ["check valid skill"] = new Config.StepTest {
+      tmpdir = true
+      write {
+        ["skills/foo/SKILL.md"] = validSkill
+      }
+      expect { code = 0 }
+    }
+    ["check invalid skill"] = new Config.StepTest {
+      tmpdir = true
+      write {
+        ["skills/foo/SKILL.md"] = invalidName
+      }
+      expect { code = 1 }
+    }
+    // One call with both paths is a usage error, so this passes only when the
+    // check validates each file on its own.
+    ["check two skills"] = new Config.StepTest {
+      tmpdir = true
+      write {
+        ["skills/foo/SKILL.md"] = validSkill
+        ["skills/bar/SKILL.md"] = validSkillUnderBar
+      }
+      expect { code = 0 }
+    }
+    ["check one invalid of two"] = new Config.StepTest {
+      tmpdir = true
+      write {
+        ["skills/foo/SKILL.md"] = validSkill
+        ["skills/bar/SKILL.md"] = invalidName
+      }
+      expect { code = 1 }
+    }
+  }
+}
