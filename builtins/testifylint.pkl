@@ -1,0 +1,166 @@
+import "../Config.pkl" as Config
+
+/// Lints testify assertions with testifylint.
+///
+/// The tool comes from the owner's fork and is installed via mise. The step
+/// lints test assertions and can rewrite them to prefer clearer forms.
+testifylint = new Config.Step {
+  glob = List("**/*.go")
+  workspace_indicator = "go.mod"
+  dir = "{{workspace}}"
+  check = new Config.CommandSpec {
+    command = "testifylint ./..."
+    effect = "read"
+  }
+  fix = new Config.CommandSpec {
+    command = "testifylint -fix ./..."
+    effect = "write"
+  }
+  diagnostic_format = "gcc"
+  tests {
+    local const badFile =
+      """
+      package foo
+
+      import (
+      \t"testing"
+
+      \t"github.com/stretchr/testify/assert"
+      )
+
+      func TestX(t *testing.T) {
+      \tassert.Equal(t, true, false)
+      }
+      """ + "\n"
+    local const fixedFile =
+      """
+      package foo
+
+      import (
+      \t"testing"
+
+      \t"github.com/stretchr/testify/assert"
+      )
+
+      func TestX(t *testing.T) {
+      \tassert.True(t, false)
+      }
+      """ + "\n"
+    local const goodFile =
+      """
+      package foo
+
+      import (
+      \t"testing"
+
+      \t"github.com/stretchr/testify/assert"
+      )
+
+      func TestX(t *testing.T) {
+      \tok := true
+      \tassert.True(t, ok)
+      }
+      """ + "\n"
+    ["check bad file"] = new Config.StepTest {
+      tmpdir = true
+      before = "go mod tidy"
+      write {
+        ["go.mod"] =
+          "module example.com/test\n\ngo 1.22\n\nrequire github.com/stretchr/testify v1.11.1\n"
+        ["go.sum"] =
+          "github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=\ngithub.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=\ngithub.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=\ngithub.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=\ngithub.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=\ngithub.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=\ngopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=\ngopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=\ngopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=\ngopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=\n"
+        ["foo_test.go"] = badFile
+      }
+      expect { code = 3 }
+    }
+    ["check good file"] = new Config.StepTest {
+      tmpdir = true
+      before = "go mod tidy"
+      write {
+        ["go.mod"] =
+          "module example.com/test\n\ngo 1.22\n\nrequire github.com/stretchr/testify v1.11.1\n"
+        ["go.sum"] =
+          "github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=\ngithub.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=\ngithub.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=\ngithub.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=\ngithub.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=\ngithub.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=\ngopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=\ngopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=\ngopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=\ngopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=\n"
+        ["foo_test.go"] = goodFile
+      }
+      expect { code = 0 }
+    }
+    ["fix bad file"] = new Config.StepTest {
+      run = "fix"
+      tmpdir = true
+      before = "go mod tidy"
+      write {
+        ["go.mod"] =
+          "module example.com/test\n\ngo 1.22\n\nrequire github.com/stretchr/testify v1.11.1\n"
+        ["go.sum"] =
+          "github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=\ngithub.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=\ngithub.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=\ngithub.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=\ngithub.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=\ngithub.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=\ngopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=\ngopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=\ngopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=\ngopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=\n"
+        ["foo_test.go"] = badFile
+      }
+      expect {
+        code = 0
+        files {
+          ["foo_test.go"] = fixedFile
+        }
+      }
+    }
+    ["fix good file"] = new Config.StepTest {
+      run = "fix"
+      tmpdir = true
+      before = "go mod tidy"
+      write {
+        ["go.mod"] =
+          "module example.com/test\n\ngo 1.22\n\nrequire github.com/stretchr/testify v1.11.1\n"
+        ["go.sum"] =
+          "github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=\ngithub.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=\ngithub.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=\ngithub.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=\ngithub.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=\ngithub.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=\ngopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=\ngopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=\ngopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=\ngopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=\n"
+        ["foo_test.go"] = goodFile
+      }
+      expect {
+        code = 0
+        files {
+          ["foo_test.go"] = goodFile
+        }
+      }
+    }
+    ["check two packages"] = new Config.StepTest {
+      tmpdir = true
+      before = "go mod tidy"
+      write {
+        ["go.mod"] =
+          "module example.com/test\n\ngo 1.22\n\nrequire github.com/stretchr/testify v1.11.1\n"
+        ["go.sum"] =
+          "github.com/davecgh/go-spew v1.1.1 h1=vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=\ngithub.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=\ngithub.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=\ngithub.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=\ngithub.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=\ngithub.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=\ngopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=\ngopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=\ngopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=\ngopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=\n"
+        ["a/a_test.go"] =
+          """
+          package a
+
+          import (
+          \t"testing"
+
+          \t"github.com/stretchr/testify/assert"
+          )
+
+          func TestA(t *testing.T) {
+          \tok := true
+          \tassert.True(t, ok)
+          }
+          """
+        ["b/b_test.go"] =
+          """
+          package b
+
+          import (
+          \t"testing"
+
+          \t"github.com/stretchr/testify/assert"
+          )
+
+          func TestB(t *testing.T) {
+          \tok := true
+          \tassert.True(t, ok)
+          }
+          """
+      }
+      expect { code = 0 }
+    }
+  }
+}
