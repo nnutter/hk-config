@@ -34,15 +34,42 @@ pinned = re.compile(
 
 
 def hk_uri(version: str) -> str:
-    """The release path that both Pkl pins share."""
+    """The release path that every Pkl pin shares."""
     return f"download/v{version}/hk@{version}"
 
 
-def replace(path: Path, old: str, new: str) -> None:
+def hk_references(version: str) -> list[Path]:
+    """Every tracked file that names an hk version.
+
+    The schema pin, the tool pin, and any builtin that extends an hk builtin
+    all name the release. A bump that misses one builds two hk versions into
+    one config, and hk rejects that config.
+    """
+    uri = hk_uri(version)
+    pin = f'hk = "{version}"'
+    tracked = subprocess.run(
+        ["git", "ls-files", "*.pkl", "mise.toml"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return sorted(
+        path
+        for path in (repo / name for name in tracked.stdout.split())
+        if uri in path.read_text() or pin in path.read_text()
+    )
+
+
+def bump(path: Path, old: str, new: str) -> None:
+    """Point every hk reference in one file at a new version."""
     text = path.read_text()
-    if old not in text:
-        raise SystemExit(f"{path.name}: cannot find {old!r}")
-    path.write_text(text.replace(old, new))
+    for before, after in (
+        (hk_uri(old), hk_uri(new)),
+        (f'hk = "{old}"', f'hk = "{new}"'),
+    ):
+        text = text.replace(before, after)
+    path.write_text(text)
 
 
 def pinned_version(config: Path) -> str:
@@ -94,15 +121,15 @@ def main() -> None:
         raise SystemExit(f"not a version: {version}")
 
     if version != old:
-        replace(config, hk_uri(old), hk_uri(version))
-        replace(repo / "hk.pkl", hk_uri(old), hk_uri(version))
-        replace(repo / "mise.toml", f'hk = "{old}"', f'hk = "{version}"')
+        for path in hk_references(old):
+            bump(path, old, version)
 
         # A leftover reference would pin part of the package to an hk release it
         # no longer targets.
-        for path in (config, repo / "hk.pkl", repo / "mise.toml"):
-            if old in path.read_text():
-                raise SystemExit(f"{path.name} still references hk {old}")
+        leftover = hk_references(old)
+        if leftover:
+            names = ", ".join(path.name for path in leftover)
+            raise SystemExit(f"still references hk {old}: {names}")
 
         log(f"hk {old} -> {version}")
 
