@@ -6,7 +6,7 @@
 // mismatch builds different Pkl types, and hk validate rejects the config.
 amends "Config.pkl"
 
-import "package://github.com/jdx/hk/releases/download/v2.10.0/hk@2.10.0#/Builtins.pkl" as Hk
+import "package://github.com/jdx/hk/releases/download/v2.11.1/hk@2.11.1#/Builtins.pkl" as Hk
 
 import "Builtins.pkl" as Extra
 

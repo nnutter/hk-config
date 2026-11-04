@@ -1,5 +1,5 @@
 [tools]
-hk = "2.10.0"  # keep in sync with the hk version pinned in Config.pkl
+hk = "2.11.1"  # keep in sync with the hk version pinned in Config.pkl
 pkl = "latest"
 uv = "latest"
 go = "latest"
