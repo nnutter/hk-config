@@ -4,8 +4,8 @@ name: release
 # extension) and then the zip that the metadata's packageZipUrl points at, so
 # both files that `pkl project package` writes must be release assets.
 #
-# Workflow runs on a tag push, and the update-hk workflow starts it by hand
-# because a tag created with GITHUB_TOKEN starts no workflow.
+# Workflow runs on a tag push. The update-hk workflow creates the tag with its
+# app token, because a tag created with GITHUB_TOKEN starts no workflow.
 on:
   push:
     tags: ["v[0-9]+.*"]
