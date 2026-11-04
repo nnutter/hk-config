@@ -49,6 +49,40 @@ constable = new Config.Step {
       \t_ = read(&v)
       }
       """
+    local const unsortedMethods =
+      """
+      package main
+
+      func (c *Counter) Increment() { c.n++ }
+
+      func (c *Counter) Add(n int) { c.n += n }
+
+      type Counter struct{ n int }
+
+      func main() {
+      \tc := &Counter{}
+      \tc.Add(1)
+      \tc.Increment()
+      \t_ = c
+      }
+      """ + "\n"
+    local const sortedMethods =
+      """
+      package main
+
+      type Counter struct{ n int }
+
+      func (c *Counter) Add(n int) { c.n += n }
+
+      func (c *Counter) Increment() { c.n++ }
+
+      func main() {
+      \tc := &Counter{}
+      \tc.Add(1)
+      \tc.Increment()
+      \t_ = c
+      }
+      """ + "\n"
     // The analyzer driver exits 3, not 1, when it reports a diagnostic.
     ["check mutated parameter"] = new Config.StepTest {
       tmpdir = true
@@ -65,6 +99,21 @@ constable = new Config.Step {
         ["main.go"] = readsParameter
       }
       expect { code = 0 }
+    }
+    ["fix unsorted methods"] = new Config.StepTest {
+      run = "fix"
+      tmpdir = true
+      before = "git init -q . && git add -A && git -c user.email=a@b -c user.name=a commit -qm init"
+      write {
+        ["go.mod"] = "module example.com/test\n\ngo 1.21\n"
+        ["main.go"] = unsortedMethods
+      }
+      expect {
+        code = 0
+        files {
+          ["main.go"] = sortedMethods
+        }
+      }
     }
   }
 }
