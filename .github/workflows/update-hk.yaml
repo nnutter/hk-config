@@ -21,8 +21,7 @@ jobs:
     timeout-minutes: 60
     permissions:
       actions: write # start the release workflow
-      contents: write # push the update branch, create the tag
-      pull-requests: write # open the pull request and enable auto-merge
+      contents: write # create the tag
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -54,17 +53,35 @@ jobs:
         run: |
           version=$(scripts/update-hk "${{ steps.hk.outputs.version }}")
           echo "version=$version" >>"$GITHUB_OUTPUT"
+      # GITHUB_TOKEN cannot open a pull request in this repository, and the
+      # events it starts create no workflow run, so the required check would
+      # never report. An app token is attributed to the app, which starts the
+      # pull request checks and keeps the change out of the ruleset's extra
+      # approval for unattributed changes.
+      - name: Mint an app token
+        id: app
+        if: steps.package.outputs.version != ''
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.APP_CLIENT_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
       - name: Open the pull request with auto-merge
         id: pr
         if: steps.package.outputs.version != ''
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          APP_SLUG: ${{ steps.app.outputs.app-slug }}
           HK_VERSION: ${{ steps.hk.outputs.version }}
           VERSION: ${{ steps.package.outputs.version }}
         run: |
           branch=update-hk
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # The app's own bot user authors the commit, so the change is
+          # attributed to a real account.
+          user_id=$(gh api "/users/${APP_SLUG}[bot]" --jq .id)
+          git config user.name "${APP_SLUG}[bot]"
+          git config user.email "$user_id+${APP_SLUG}[bot]@users.noreply.github.com"
           git checkout -B "$branch"
           git commit -am "Update hk to v$HK_VERSION"
           git push --force \
