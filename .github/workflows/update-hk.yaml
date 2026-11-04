@@ -107,10 +107,13 @@ jobs:
           PR: ${{ steps.pr.outputs.number }}
         run: |
           # Auto-merge waits for the pull request checks. Hold this job until
-          # GitHub merges, so the tag lands on the commit CI approved.
+          # GitHub merges, so the tag lands on the commit CI approved. A
+          # transient API error must not end the wait, so a failed call keeps
+          # the last known state and the loop asks again.
           state=OPEN
           for _ in {1..90}; do
-            state=$(gh pr view "$PR" --json state --jq .state)
+            next=$(gh pr view "$PR" --json state --jq .state) || next=$state
+            state=$next
             [[ $state == MERGED ]] && break
             [[ $state == CLOSED ]] && break
             sleep 20
