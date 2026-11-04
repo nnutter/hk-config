@@ -1,10 +1,11 @@
 import "../Config.pkl" as Config
 
-/// Lints Go code with constable: non-mutating contracts, complexity, and
-/// predicates.
+/// Lints Go code with constable: non-mutating contracts, method order,
+/// complexity, predicates, and testify usage.
 ///
-/// constable accepts `-fix` today, but its analyzers do not suggest fixes yet,
-/// so the fix command currently leaves the files alone and exits 0.
+/// `-fix` applies the method-order fixes that the methodical analyzer offers.
+/// The tool rewrites a file only when Git tracks it with no changes, so the fix
+/// test commits the files first.
 constable = new Config.Step {
   glob = List("**/*.go")
   workspace_indicator = "go.mod"
