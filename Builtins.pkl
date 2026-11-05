@@ -14,6 +14,9 @@ mdlint = import("builtins/mdlint.pkl").mdlint
 /// Groups imports with goimports, including this module's own packages.
 go_imports = import("builtins/go_imports.pkl").go_imports
 
+/// Runs the repository's code generators with go generate.
+go_generate = import("builtins/go_generate.pkl").go_generate
+
 /// Scans Go code for high-severity security problems with gosec.
 go_sec = import("builtins/go_sec.pkl").go_sec
 
@@ -31,3 +34,6 @@ timber_commit_msg = import("builtins/timber_commit_msg.pkl").timber_commit_msg
 
 /// Checks protobuf APIs against Google's API Improvement Proposals.
 api_linter = import("builtins/api_linter.pkl").api_linter
+
+/// Checks protos with api-linter and a buf descriptor set, so buf resolves imports.
+api_linter_buf = import("builtins/api_linter_buf.pkl").api_linter_buf

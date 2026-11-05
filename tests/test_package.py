@@ -60,6 +60,10 @@ goimports -local "$(go list -m)" -w {{files}}""",
         'steps["go_sec"].check.command',
         "gosec -severity high -quiet ./...",
     ),
+    "go_generate": (
+        'steps["go_generate"].fix.command.argv.join(" ")',
+        "go generate ./...",
+    ),
     "gohawk": (
         'steps["gohawk"].check.command.argv.join(" ")',
         "gohawk ./...",
@@ -107,6 +111,14 @@ HOOKS = {
     "fix orders a group": (
         'Hooks.fix(List("go")).steps["constable"].depends',
         'List("go_fix")',
+    ),
+    "a group generates before it formats": (
+        'Hooks.fix(List("go")).steps["go_imports"].depends',
+        'List("go_generate")',
+    ),
+    "a group's generator has no order": (
+        'Hooks.fix(List("go")).steps["go_generate"].depends',
+        "List()",
     ),
     "a group's readers wait for its last fixer": (
         'Hooks.fix(List("go")).steps["go_sec"].depends',
