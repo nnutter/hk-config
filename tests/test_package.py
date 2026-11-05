@@ -94,7 +94,7 @@ HOOKS = {
     ),
     "fix orders a group": (
         'Hooks.fix(List("go")).steps["constable"].depends',
-        'List("testifylint")',
+        'List("go_fix")',
     ),
     "a group's readers wait for its last fixer": (
         'Hooks.fix(List("go")).steps["go_sec"].depends',

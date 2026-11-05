@@ -20,9 +20,6 @@ go_sec = import("builtins/go_sec.pkl").go_sec
 /// Lints Go code with constable: non-mutating contracts, complexity, and predicates.
 constable = import("builtins/constable.pkl").constable
 
-/// Lints testify assertions with testifylint.
-testifylint = import("builtins/testifylint.pkl").testifylint
-
 /// Finds resource-lifetime and concurrency bugs with gohawk.
 gohawk = import("builtins/gohawk.pkl").gohawk
 

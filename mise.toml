@@ -9,9 +9,6 @@ uv = "latest"
 go = "latest"
 "go:github.com/kojah/gohawk" = "latest"
 "go:github.com/nnutter/constable/cmd/constable" = "latest"
-# Pinned rather than latest: the fork has one pseudo-version, and mise's
-# minimum_release_age hides a release for 24 hours after it appears.
-"go:github.com/nnutter/testifylint" = "0.0.0-20261101203540-577bf922d916"
 "go:github.com/securego/gosec/v2/cmd/gosec" = "latest"
 "go:github.com/nnutter/timber" = "latest"
 "go:golang.org/x/tools/cmd/goimports" = "latest"
