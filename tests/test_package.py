@@ -84,6 +84,77 @@ exit $status""",
 }
 
 
+# One entry per hook-template check: the Pkl expression to read back and the
+# value it must produce. The expressions are booleans and short renderings, so
+# a failure names the behaviour rather than a block of configuration.
+HOOKS = {
+    "check runs the default steps": (
+        'Hooks.check(List()).steps.containsKey("mdlint")',
+        "true",
+    ),
+    "defaults leave the groups out": (
+        'Hooks.check(List()).steps.containsKey("skills_ref")',
+        "false",
+    ),
+    "a group adds its steps": (
+        'Hooks.check(List("agentskills")).steps.containsKey("skills_ref")',
+        "true",
+    ),
+    "fix orders a group": (
+        'Hooks.fix(List("go")).steps["constable"].depends',
+        'List("testifylint")',
+    ),
+    "a group's readers wait for its last fixer": (
+        'Hooks.fix(List("go")).steps["go_sec"].depends',
+        'List("gomod_tidy")',
+    ),
+    "a group's readers do not wait for each other": (
+        'Hooks.fix(List("go")).steps["gohawk"].depends',
+        'List("gomod_tidy")',
+    ),
+    "a group without fixers has no order": (
+        'Hooks.fix(List("agentskills")).steps["skills_ref"].depends',
+        "List()",
+    ),
+    "check does not order a group": (
+        'Hooks.check(List("go")).steps["constable"].depends',
+        "List()",
+    ),
+    "defaults fan out after whitespace": (
+        'Hooks.fix(List()).steps["mdlint"].depends',
+        'List("trailing_whitespace")',
+    ),
+    "pkl waits for its formatter": (
+        'Hooks.fix(List()).steps["pkl"].depends',
+        'List("pkl_format")',
+    ),
+    "fix scans the worktree for secrets": (
+        'Hooks.fix(List()).steps["gitleaks"].check.command.argv.join(" ")',
+        "gitleaks dir --redact --verbose --no-banner .",
+    ),
+    "pre-commit scans staged content for secrets": (
+        'Hooks.preCommit(List()).steps["gitleaks"].check.command.argv.join(" ")',
+        "gitleaks git --pre-commit --redact --staged --verbose --no-banner",
+    ),
+    "pre-commit orders ts-backend": (
+        'Hooks.preCommit(List("ts-backend")).steps["tsc"].depends',
+        'List("ox_lint_backend")',
+    ),
+    "json formats with oxfmt": (
+        'Hooks.check(List("json")).steps.containsKey("oxfmt_json")',
+        "true",
+    ),
+    "commit-msg adds the change id": (
+        'Hooks.commitMsg().steps.containsKey("change-id")',
+        "true",
+    ),
+    "all exposes every hook": (
+        'Hooks.all(List("go")).containsKey("commit-msg")',
+        "true",
+    ),
+}
+
+
 class Package:
     """The packaged artifacts, named the way a consumer names them."""
 
@@ -95,7 +166,9 @@ class Package:
         assert self.metadata.is_file(), f"no metadata file next to {self.zip.name}"
         with zipfile.ZipFile(self.zip) as archive:
             self.modules = archive.namelist()
-        assert {"Builtins.pkl", "Config.pkl"} <= set(self.modules), self.modules
+        assert {"Builtins.pkl", "Config.pkl", "Hooks.pkl"} <= set(self.modules), (
+            self.modules
+        )
 
 
 @pytest.fixture(scope="session")
@@ -184,3 +257,47 @@ steps {{
     result = pkl_eval(release, tmp_path, str(consumer), "-x", expression)
     assert result.returncode == 0, result.stderr
     assert result.stdout.strip() == expected_command
+
+
+def hooks_consumer(package: Package, work: Path) -> Path:
+    """A consumer config that imports the packaged hooks module."""
+    uri = f"package://{PACKAGE_HOST}/{package.name}@{package.version}"
+    consumer = work / "hk.pkl"
+    consumer.write_text(
+        f'''amends "{uri}#/Config.pkl"
+
+import "{uri}#/Hooks.pkl" as Hooks
+'''
+    )
+    return consumer
+
+
+@pytest.mark.parametrize(
+    ("expression", "expected"),
+    list(HOOKS.values()),
+    ids=list(HOOKS),
+)
+def test_consumer_resolves_hooks(
+    package: Package,
+    release: str,
+    tmp_path: Path,
+    expression: str,
+    expected: str,
+) -> None:
+    """The packaged hooks module answers the way the templates promise."""
+    consumer = hooks_consumer(package, tmp_path)
+    result = pkl_eval(release, tmp_path, str(consumer), "-x", expression)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == expected
+
+
+def test_consumer_rejects_an_unknown_group(
+    package: Package, release: str, tmp_path: Path
+) -> None:
+    """A misspelled group fails with the group names, not with a quiet no-op."""
+    consumer = hooks_consumer(package, tmp_path)
+    result = pkl_eval(
+        release, tmp_path, str(consumer), "-x", 'Hooks.check(List("nope"))'
+    )
+    assert result.returncode != 0
+    assert "is not a group" in result.stderr
