@@ -1,0 +1,62 @@
+import "../Config.pkl" as Config
+
+/// Checks protobuf APIs against Google's API Improvement Proposals with
+/// Google's api-linter.
+///
+/// The linter prints its findings and then exits 0, so the check passes
+/// `--set-exit-status`: without that flag no finding fails a hook.
+///
+/// The linter resolves an import against the working directory, and it ignores
+/// an `-I` path that lies inside that directory, so the step runs at the proto
+/// import root. A repository whose protos are rooted in a subdirectory moves
+/// the step there:
+///
+/// ```pkl
+/// ["api_linter"] = (Extra.api_linter) {
+///   dir = "proto"
+///   glob = List("proto/**/*.proto")
+/// }
+/// ```
+///
+/// The linter also reads no config file unless `--config` names one. There is
+/// no fix command: the tool reports what to change and changes nothing.
+///
+/// Its findings are YAML, which is not the `path:line:column: message` shape of
+/// any diagnostic format, so the step claims none.
+api_linter = new Config.Step {
+  glob = List("**/*.proto")
+  check = new Config.CommandSpec {
+    command = new Config.Command {
+      argv = List("api-linter", "--set-exit-status", "{{files}}")
+    }
+    effect = "read"
+  }
+  tests {
+    local const noJavaOptions =
+      """
+      syntax = "proto3";
+
+      package example.v1;
+      """
+    local const javaOptions =
+      """
+      syntax = "proto3";
+
+      package example.v1;
+
+      option java_multiple_files = true;
+      option java_package = "com.example.v1";
+      option java_outer_classname = "ExampleProto";
+      """
+    ["check missing java options"] = new Config.StepTest {
+      tmpdir = true
+      write { ["example.proto"] = noJavaOptions }
+      expect { code = 1 }
+    }
+    ["check java options"] = new Config.StepTest {
+      tmpdir = true
+      write { ["example.proto"] = javaOptions }
+      expect { code = 0 }
+    }
+  }
+}

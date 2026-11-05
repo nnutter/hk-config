@@ -80,12 +80,6 @@ local function fileDefaults(gitleaks: Config.Step): List<NamedStep> =
 local agentskills: List<NamedStep> =
   List(new NamedStep { name = "skills_ref"; step = Extra.skills_ref })
 
-local buf: List<NamedStep> =
-  List(
-    new NamedStep { name = "buf_format"; step = Hk.buf_format },
-    new NamedStep { name = "buf_lint"; step = Hk.buf_lint },
-  )
-
 /// Fixers first, so the analyzers read the code the fixers leave behind. The
 /// readers name no `after`: they wait for the last fixer, not for each other.
 local go: List<NamedStep> =
@@ -109,6 +103,15 @@ local python: List<NamedStep> =
     new NamedStep { name = "ruff_format"; step = Hk.ruff_format },
     new NamedStep { name = "ruff"; after = "ruff_format"; step = Hk.ruff },
     new NamedStep { name = "ty"; step = Hk.ty },
+  )
+
+/// The formatter first, so the linters read the files it leaves behind. The
+/// readers name no `after`: they wait for the last fixer, not for each other.
+local proto: List<NamedStep> =
+  List(
+    new NamedStep { name = "buf_format"; step = Hk.buf_format },
+    new NamedStep { name = "buf_lint"; step = Hk.buf_lint },
+    new NamedStep { name = "api_linter"; step = Extra.api_linter },
   )
 
 local rust: List<NamedStep> =
@@ -150,14 +153,14 @@ local yaml: List<NamedStep> = List(new NamedStep { name = "yamlfmt"; step = Hk.y
 local function chainFor(name: String): List<NamedStep> =
   if (name == "agentskills")
     agentskills
-  else if (name == "buf")
-    buf
   else if (name == "go")
     go
   else if (name == "json")
     json
   else if (name == "python")
     python
+  else if (name == "proto")
+    proto
   else if (name == "rust")
     rust
   else if (name == "shell")
@@ -172,7 +175,7 @@ local function chainFor(name: String): List<NamedStep> =
     yaml
   else
     throw(
-      "\"\(name)\" is not a group: use one of agentskills, buf, go, json, python, rust, shell, toml, ts-backend, ts-frontend, yaml"
+      "\"\(name)\" is not a group: use one of agentskills, go, json, proto, python, rust, shell, toml, ts-backend, ts-frontend, yaml"
     )
 
 /// One function for a hook: the defaults first, then each selected group.

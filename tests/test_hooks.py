@@ -26,9 +26,9 @@ PINNED = re.compile(
 
 GROUPS = [
     "agentskills",
-    "buf",
     "go",
     "json",
+    "proto",
     "python",
     "rust",
     "shell",
