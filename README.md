@@ -77,10 +77,14 @@ Each hook runs its own default steps, and `groups` adds more.
 
 | Hook | Default steps |
 | --- | --- |
-| `check` | `newlines`, `trailing_whitespace`, `pkl_format`, `pkl`, `mdlint`, `mise`, `actionlint`, `gitleaks` over the worktree |
+| `check` | `newlines`, `trailing_whitespace`, `pkl_format`, `pkl`, `mdlint`, `mise`, `jactionlint`, `gitleaks` over the worktree |
 | `fix` | the same steps, running the fix commands |
 | `pre-commit` | the same steps, with `gitleaks` over staged content, staging the fixes |
 | `commit-msg` | `change-id` only, because it rewrites the message file |
+
+`jactionlint` is hk's builtin for `jdx/jactionlint`, a maintained fork of `actionlint` that also reads composite actions and Dependabot configuration.
+Its default profile checks more than `actionlint` did, and it rewrites files in the hooks that fix.
+A consumer that switches to this template can therefore see findings they did not see before, and fixes applied to their workflows: set a job timeout, a concurrency group, and explicit permissions on each workflow.
 
 ## Hook groups
 
@@ -101,7 +105,7 @@ Each hook runs its own default steps, and `groups` adds more.
 A misspelled group fails the config with the list of group names.
 
 `fix` and `pre-commit` set `depends` inside each group: the steps that rewrite files form a chain, and every step that only reads waits for the last fixer and for no other reader, so the readers run together.
-The default steps fan out the same way: `newlines` then `trailing_whitespace`, and then `pkl_format`, `mdlint`, `mise`, `actionlint`, and `gitleaks` each wait only for `trailing_whitespace`, while `pkl` waits for `pkl_format`.
+The default steps order the same way: `newlines` then `trailing_whitespace`, and then `pkl_format`, `mdlint`, `mise`, and `jactionlint` each wait only for `trailing_whitespace`, while `pkl` waits for `pkl_format` and `gitleaks` waits for `jactionlint`, the last default step that rewrites files.
 Groups have no `depends` between them, so they run at the same time when their file selections differ. hk's file locks still serialize steps that select the same file, which is why `newlines` and `trailing_whitespace` — both select every text file — wait for each other. `check` sets no `depends`, so every step runs at once.
 
 A consumer adds a step after the template, and drops a default step with hk's own setting:
@@ -118,7 +122,7 @@ hooks = (Hooks.all(List("go"))) {
   }
 }
 
-skip_steps = List("actionlint")
+skip_steps = List("jactionlint")
 ```
 
 hk's `oxfmt` builtin selects Markdown, YAML, TOML, JSON, HTML, and CSS as well as JavaScript and
