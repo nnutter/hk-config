@@ -30,6 +30,7 @@ Amending hk's `Config.pkl` directly also works, but then its version must equal 
 | Name | Runs |
 | --- | --- |
 | `api_linter` | `api-linter --set-exit-status` on `**/*.proto` |
+| `api_linter_buf` | `api-linter --set-exit-status` with a `buf build` descriptor set on `**/*.proto` |
 | `constable` | `constable ./...` to check, `constable -fix ./...` to fix, both with `-sumtype.default-signifies-exhaustive=false` and `-sumtype.include-shared-interfaces`, on `**/*.go` |
 | `go_imports` | `goimports -local "$(go list -m)" -l` and `-d` to check, `-w` to fix, on `**/*.go` |
 | `go_sec` | `gosec -severity high -quiet ./...` on `**/*.go` |
@@ -41,7 +42,13 @@ Amending hk's `Config.pkl` directly also works, but then its version must equal 
 The Go builtins run at the `go.mod` workspace and need a Go toolchain.
 
 `api_linter` runs at the working directory, which has to be the root that the protos import from: the linter resolves an import against it and ignores an `-I` path inside it.
-A repository whose protos are rooted in `proto/` copies the step with `dir = "proto"` and `glob = List("proto/**/*.proto")`, and it needs the imports on disk, because a buf module cache is not on the import path.
+A repository whose protos are rooted in `proto/` sets `dir = "proto"`, and the default glob then selects the files under that directory.
+`api_linter` needs the imports on disk, because a buf module cache is not on the import path.
+
+`api_linter_buf` runs the same way, at the root of a buf module, and pipes a descriptor set from `buf build` into the linter.
+Buf then resolves imports from other modules, including the module cache.
+It needs `buf` and `api-linter`, and it runs on bash because it uses process substitution.
+The `proto` hook group keeps `api_linter`, so a consumer that selects `api_linter_buf` replaces that step.
 
 Install the tools with mise:
 

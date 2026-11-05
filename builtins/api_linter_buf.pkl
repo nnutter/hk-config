@@ -1,0 +1,81 @@
+import "../Config.pkl" as Config
+
+/// Checks protos with api-linter, letting buf resolve every import.
+///
+/// api-linter resolves an import against the working directory, and a buf
+/// module cache is not on that path. A descriptor set carries the imports, so
+/// the step pipes one from `buf build` into the linter and needs no temp file.
+///
+/// The descriptor set names each file relative to its module, so the step runs
+/// at the module root. The default is the buf workspace root, which is the
+/// module root for a workspace whose `buf.yaml` sits beside its protos. A
+/// repository whose module is a subdirectory, such as `proto/`, moves the step
+/// there:
+///
+/// ```pkl
+/// ["api_linter"] = (Extra.api_linter_buf) {
+///   dir = "proto"
+///   glob = List("proto/**/*.proto")
+/// }
+/// ```
+///
+/// The process substitution needs bash rather than hk's default `sh`.
+///
+/// Findings are YAML, which is not the `path:line:column: message` shape of any
+/// diagnostic format, so the step claims none.
+api_linter_buf = new Config.Step {
+  glob = List("**/*.proto")
+  dir = "{{workspace}}"
+  workspace_indicator = "buf.yaml"
+  shell = "bash -o errexit -c"
+  check = new Config.CommandSpec {
+    command =
+      """
+      api-linter --set-exit-status --descriptor-set-in <(buf build --as-file-descriptor-set -o -) {{files}}
+      """
+    effect = "read"
+  }
+  tests {
+    local const noJavaOptions =
+      """
+      syntax = "proto3";
+
+      package example.dependency.v1;
+
+      // Dependency is imported by the selected file.
+      message Dependency {}
+      """
+    ["check an imported message"] = new Config.StepTest {
+      tmpdir = true
+      files = List("example/v1/example.proto")
+      write {
+        ["buf.yaml"] = "version: v2\n"
+        ["example/dependency/v1/dependency.proto"] = noJavaOptions
+        ["example/v1/example.proto"] =
+          """
+          syntax = "proto3";
+
+          package example.v1;
+
+          import "example/dependency/v1/dependency.proto";
+
+          option java_multiple_files = true;
+          option java_package = "com.example.v1";
+          option java_outer_classname = "ExampleProto";
+
+          // Example imports a message from another package.
+          message Example {}
+          """
+      }
+      expect { code = 0 }
+    }
+    ["check missing java options"] = new Config.StepTest {
+      tmpdir = true
+      write {
+        ["buf.yaml"] = "version: v2\n"
+        ["example/dependency/v1/dependency.proto"] = noJavaOptions
+      }
+      expect { code = 1 }
+    }
+  }
+}

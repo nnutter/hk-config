@@ -31,3 +31,6 @@ timber_commit_msg = import("builtins/timber_commit_msg.pkl").timber_commit_msg
 
 /// Checks protobuf APIs against Google's API Improvement Proposals.
 api_linter = import("builtins/api_linter.pkl").api_linter
+
+/// Checks protos with api-linter and a buf descriptor set, so buf resolves imports.
+api_linter_buf = import("builtins/api_linter_buf.pkl").api_linter_buf

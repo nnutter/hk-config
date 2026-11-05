@@ -9,12 +9,11 @@ import "../Config.pkl" as Config
 /// The linter resolves an import against the working directory, and it ignores
 /// an `-I` path that lies inside that directory, so the step runs at the proto
 /// import root. A repository whose protos are rooted in a subdirectory moves
-/// the step there:
+/// the step there, and the default glob then selects the files under it:
 ///
 /// ```pkl
 /// ["api_linter"] = (Extra.api_linter) {
 ///   dir = "proto"
-///   glob = List("proto/**/*.proto")
 /// }
 /// ```
 ///

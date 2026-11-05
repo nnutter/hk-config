@@ -9,6 +9,7 @@ amends "Config.pkl"
 
 import "package://github.com/jdx/hk/releases/download/v2.11.1/hk@2.11.1#/Builtins.pkl" as Hk
 
+import "Builtins.pkl" as Extra
 import "Hooks.pkl" as Hooks
 
 // The templates run over this repository's own files, so a change to them is
@@ -22,6 +23,7 @@ hooks = (Hooks.all(List("go", "agentskills", "proto", "python"))) {
   ["check"] {
     steps {
       ["hk_test"] = Hk.hk_test
+      ["api_linter_buf"] = Extra.api_linter_buf
     }
   }
   ["fix"] {
