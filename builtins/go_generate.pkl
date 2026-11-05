@@ -1,0 +1,47 @@
+import "../Config.pkl" as Config
+
+/// Runs the repository's code generators with `go generate`.
+///
+/// The step only fixes, so a check hook skips it and the hooks that rewrite
+/// files run the generators. The default glob selects the files that commonly
+/// feed a generator in a Go repository, so a change to a proto or to the buf
+/// config also runs it. A repository that generates from other inputs adds
+/// them to the glob.
+///
+/// It runs at the `go.mod` workspace and takes no `{{files}}`: a generator
+/// belongs to a package, and `go generate` walks them with `./...`.
+///
+/// ```pkl
+/// ["go_generate"] = (Extra.go_generate) {
+///   glob = List("**/*.go", "**/*.proto", "buf.yaml", "buf.gen.yaml", "buf.lock", "templates/**/*.tmpl")
+/// }
+/// ```
+go_generate = new Config.Step {
+  glob = List("**/*.go", "**/*.proto", "buf.yaml", "buf.gen.yaml", "buf.lock")
+  dir = "{{workspace}}"
+  workspace_indicator = "go.mod"
+  fix = new Config.CommandSpec {
+    command = new Config.Command {
+      argv = List("go", "generate", "./...")
+    }
+    effect = "write"
+  }
+  tests {
+    ["fix writes generated files"] = new Config.StepTest {
+      run = "fix"
+      tmpdir = true
+      write {
+        ["go.mod"] = "module example.com/test\n\ngo 1.21\n"
+        ["main.go"] =
+          """
+          package main
+
+          //go:generate sh -c "printf generated > generated.txt"
+
+          func main() {}
+          """
+      }
+      expect { files { ["generated.txt"] = "generated" } }
+    }
+  }
+}

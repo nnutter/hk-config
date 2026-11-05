@@ -33,6 +33,7 @@ Amending hk's `Config.pkl` directly also works, but then its version must equal 
 | `api_linter_buf` | `api-linter --set-exit-status` with a `buf build` descriptor set on `**/*.proto` |
 | `constable` | `constable ./...` to check, `constable -fix ./...` to fix, both with `-sumtype.default-signifies-exhaustive=false` and `-sumtype.include-shared-interfaces`, on `**/*.go` |
 | `go_imports` | `goimports -local "$(go list -m)" -l` and `-d` to check, `-w` to fix, on `**/*.go` |
+| `go_generate` | `go generate ./...` to fix, on `**/*.go`, `**/*.proto`, and the buf config |
 | `go_sec` | `gosec -severity high -quiet ./...` on `**/*.go` |
 | `gohawk` | `gohawk ./...` on `**/*.go` |
 | `mdlint` | `mdlint format --check` and `mdlint check --no-fix` to check, `mdlint format` and `mdlint check --fix` to fix, on `**/*.md` and `**/*.markdown` |
@@ -40,6 +41,8 @@ Amending hk's `Config.pkl` directly also works, but then its version must equal 
 | `timber_commit_msg` | `timber review commit-msg` in a `commit-msg` hook |
 
 The Go builtins run at the `go.mod` workspace and need a Go toolchain.
+`go_generate` only fixes, so a check hook skips it and the hooks that rewrite files run it first in the `go` group, before the steps that format its output.
+A repository that generates from other inputs adds them to its glob.
 
 `api_linter` runs at the working directory, which has to be the root that the protos import from: the linter resolves an import against it and ignores an `-I` path inside it.
 A repository whose protos are rooted in `proto/` sets `dir = "proto"`, and the default glob then selects the files under that directory.
@@ -98,7 +101,7 @@ A consumer that switches to this template can therefore see findings they did no
 | Group | Steps |
 | --- | --- |
 | `agentskills` | `skills_ref` |
-| `go` | `go_imports`, `go_fumpt`, `go_fix`, `constable`, `gomod_tidy`, `go_vet`, `staticcheck`, `go_vuln_check`, `go_sec`, `gohawk` |
+| `go` | `go_generate`, `go_imports`, `go_fumpt`, `go_fix`, `constable`, `gomod_tidy`, `go_vet`, `staticcheck`, `go_vuln_check`, `go_sec`, `gohawk` |
 | `json` | `oxfmt` over `json`, `jsonc`, `json5` |
 | `proto` | `buf_format`, `buf_lint`, `api_linter` |
 | `python` | `ruff_format`, `ruff`, `ty` |

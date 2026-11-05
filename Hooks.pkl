@@ -80,11 +80,13 @@ local function fileDefaults(gitleaks: Config.Step): List<NamedStep> =
 local agentskills: List<NamedStep> =
   List(new NamedStep { name = "skills_ref"; step = Extra.skills_ref })
 
-/// Fixers first, so the analyzers read the code the fixers leave behind. The
-/// readers name no `after`: they wait for the last fixer, not for each other.
+/// The generator first, then the formatters, so the files it writes are
+/// formatted and their imports grouped. The readers name no `after`: they wait
+/// for the last fixer, not for each other.
 local go: List<NamedStep> =
   List(
-    new NamedStep { name = "go_imports"; step = Extra.go_imports },
+    new NamedStep { name = "go_generate"; step = Extra.go_generate },
+    new NamedStep { name = "go_imports"; after = "go_generate"; step = Extra.go_imports },
     new NamedStep { name = "go_fumpt"; after = "go_imports"; step = Hk.go_fumpt },
     new NamedStep { name = "go_fix"; after = "go_fumpt"; step = Hk.go_fix },
     new NamedStep { name = "constable"; after = "go_fix"; step = Extra.constable },
