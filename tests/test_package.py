@@ -33,10 +33,6 @@ BUILTINS = {
         'steps["mdlint"].check.command',
         "mdlint format --check {{files}} && mdlint check --no-fix {{files}}",
     ),
-    "go_check_sumtype": (
-        'steps["go_check_sumtype"].check.command.argv.join(" ")',
-        "go-check-sumtype -default-signifies-exhaustive=false -include-shared-interfaces ./...",
-    ),
     "go_imports": (
         'List(steps["go_imports"].check_list_files.command, steps["go_imports"].check_diff.command, steps["go_imports"].fix.command).join("\\n")',
         """\

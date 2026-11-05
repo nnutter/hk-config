@@ -30,7 +30,6 @@ Amending hk's `Config.pkl` directly also works, but then its version must equal 
 | Name | Runs |
 | --- | --- |
 | `constable` | `constable ./...` to check, `constable -fix ./...` to fix, on `**/*.go` |
-| `go_check_sumtype` | `go-check-sumtype -default-signifies-exhaustive=false -include-shared-interfaces ./...` on `**/*.go` |
 | `go_imports` | `goimports -local "$(go list -m)" -l` and `-d` to check, `-w` to fix, on `**/*.go` |
 | `go_sec` | `gosec -severity high -quiet ./...` on `**/*.go` |
 | `gohawk` | `gohawk ./...` on `**/*.go` |
@@ -45,7 +44,6 @@ Install the tools with mise:
 
 ```sh
 mise use "github:nnutter/mdlint@latest"
-mise use "go:github.com/alecthomas/go-check-sumtype/cmd/go-check-sumtype@latest"
 mise use "go:github.com/kojah/gohawk@latest"
 mise use "go:github.com/nnutter/constable/cmd/constable@latest"
 mise use "go:github.com/securego/gosec/v2/cmd/gosec@latest"
@@ -90,7 +88,7 @@ A consumer that switches to this template can therefore see findings they did no
 | --- | --- |
 | `agentskills` | `skills_ref` |
 | `buf` | `buf_format`, `buf_lint` |
-| `go` | `go_imports`, `go_fumpt`, `go_fix`, `testifylint`, `gomod_tidy`, `go_vet`, `staticcheck`, `go_vuln_check`, `constable`, `go_check_sumtype`, `go_sec`, `gohawk` |
+| `go` | `go_imports`, `go_fumpt`, `go_fix`, `testifylint`, `gomod_tidy`, `go_vet`, `staticcheck`, `go_vuln_check`, `constable`, `go_sec`, `gohawk` |
 | `json` | `oxfmt` over `json`, `jsonc`, `json5` |
 | `python` | `ruff_format`, `ruff`, `ty` |
 | `rust` | `cargo_fmt`, `cargo_check`, `cargo_clippy` |
