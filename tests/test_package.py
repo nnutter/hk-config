@@ -128,6 +128,14 @@ HOOKS = {
         'Hooks.fix(List()).steps["pkl"].depends',
         'List("pkl_format")',
     ),
+    "defaults lint the workflows with jactionlint": (
+        'Hooks.check(List()).steps["jactionlint"].check.command.argv.join(" ")',
+        "jactionlint --format gcc {{files}}",
+    ),
+    "the secrets scan waits for the last default fixer": (
+        'Hooks.fix(List()).steps["gitleaks"].depends',
+        'List("jactionlint")',
+    ),
     "fix scans the worktree for secrets": (
         'Hooks.fix(List()).steps["gitleaks"].check.command.argv.join(" ")',
         "gitleaks dir --redact --verbose --no-banner .",
