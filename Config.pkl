@@ -1,9 +1,11 @@
 /// Re-export of hk's configuration schema that this package's builtins are
 /// written against.
 ///
-/// The import below is the single place that pins the hk version. Builtins
-/// import this module instead of repeating the version. Consumers amend this
-/// module, or amend hk's `Config.pkl` at the same version: `Config.Step`
+/// The import below is the schema pin: builtins import this module instead of
+/// repeating the version. A module that needs an hk builtin, such as
+/// `Hooks.pkl`, imports hk's `Builtins.pkl` at that same version, and
+/// `tests/test_pins.py` fails when a file names another one. Consumers amend
+/// this module, or amend hk's `Config.pkl` at the same version: `Config.Step`
 /// objects built from a different hk version are different types.
 module hk_config.Config
 

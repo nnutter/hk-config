@@ -58,6 +58,73 @@ mise use "pypi:agentskills-tools@latest"
 mise use go@latest
 ```
 
+## Hooks
+
+`Hooks.pkl` runs a group of steps in each hook, so a consumer does not list every step itself.
+
+```pkl
+// hk.pkl
+import "package://github.com/nnutter/hk-config/releases/download/v<hk-version>-<revision>/hk-config@<hk-version>-<revision>#/Hooks.pkl" as Hooks
+
+hooks = Hooks.all(List("go", "python"))
+```
+
+`Hooks.all(groups)` builds the `check`, `fix`, `pre-commit`, and `commit-msg` hooks.
+`Hooks.check(groups)`, `Hooks.fix(groups)`, `Hooks.preCommit(groups)`, and `Hooks.commitMsg()` build one hook each, for a config that sets them separately.
+The argument is required because the Pkl evaluator inside hk has no default parameter values; `List()` runs the defaults alone.
+
+Each hook runs its own default steps, and `groups` adds more.
+
+| Hook | Default steps |
+| --- | --- |
+| `check` | `newlines`, `trailing_whitespace`, `pkl_format`, `pkl`, `mdlint`, `mise`, `actionlint`, `gitleaks` over the worktree |
+| `fix` | the same steps, running the fix commands |
+| `pre-commit` | the same steps, with `gitleaks` over staged content, staging the fixes |
+| `commit-msg` | `change-id` only, because it rewrites the message file |
+
+## Hook groups
+
+| Group | Steps |
+| --- | --- |
+| `agentskills` | `skills_ref` |
+| `buf` | `buf_format`, `buf_lint` |
+| `go` | `go_imports`, `go_fumpt`, `go_fix`, `testifylint`, `gomod_tidy`, `go_vet`, `staticcheck`, `go_vuln_check`, `err_check`, `constable`, `go_check_sumtype`, `nilaway`, `go_sec`, `gohawk` |
+| `json` | `oxfmt` over `json`, `jsonc`, `json5` |
+| `python` | `ruff_format`, `ruff`, `ty` |
+| `rust` | `cargo_fmt`, `cargo_check`, `cargo_clippy` |
+| `shell` | `shfmt`, `shellcheck` |
+| `toml` | `tombi_format`, `tombi` |
+| `ts-backend` | `oxfmt`, `ox_lint`, `tsc` over `ts`, `mts`, `cts`, `js`, `mjs`, `cjs` |
+| `ts-frontend` | `oxfmt`, `ox_lint` over `jsx`, `tsx`, `vue`, `svelte`, `mdx`, `astro` |
+| `yaml` | `yamlfmt` |
+
+A misspelled group fails the config with the list of group names.
+
+`fix` and `pre-commit` set `depends` inside each group: the steps that rewrite files form a chain, and every step that only reads waits for the last fixer and for no other reader, so the readers run together.
+The default steps fan out the same way: `newlines` then `trailing_whitespace`, and then `pkl_format`, `mdlint`, `mise`, `actionlint`, and `gitleaks` each wait only for `trailing_whitespace`, while `pkl` waits for `pkl_format`.
+Groups have no `depends` between them, so they run at the same time when their file selections differ. hk's file locks still serialize steps that select the same file, which is why `newlines` and `trailing_whitespace` — both select every text file — wait for each other. `check` sets no `depends`, so every step runs at once.
+
+A consumer adds a step after the template, and drops a default step with hk's own setting:
+
+```pkl
+hooks = (Hooks.all(List("go"))) {
+  ["pre-commit"] {
+    steps {
+      ["own"] = new Step {
+        glob = List("**/*.txt")
+        check = "true"
+      }
+    }
+  }
+}
+
+skip_steps = List("actionlint")
+```
+
+hk's `oxfmt` builtin selects Markdown, YAML, TOML, JSON, HTML, and CSS as well as JavaScript and
+TypeScript.
+The template narrows a copy for each group, because two groups must not format the same file.
+
 ## Releases
 
 A tag names a package version, so `v2.10.0-1` is the second release against hk 2.10.0.

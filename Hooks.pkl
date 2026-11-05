@@ -1,0 +1,263 @@
+/// Hook templates that run a group of steps, so a consumer does not list each
+/// step in every hook.
+///
+/// Each hook carries its own default steps, which run whatever groups the
+/// consumer names, and the `groups` argument adds the steps of those groups.
+/// `fix` and `pre-commit` order the steps inside a group with `depends`, and
+/// `check` sets none, so a check runs every step in parallel.
+///
+/// ```pkl
+/// import "package://github.com/nnutter/hk-config/releases/download/v2.11.1-0/hk-config@2.11.1-0#/Hooks.pkl" as Hooks
+///
+/// hooks = Hooks.all(List("go", "python"))
+/// ```
+module hk_config.Hooks
+
+import "package://github.com/jdx/hk/releases/download/v2.11.1/hk@2.11.1#/Builtins.pkl" as Hk
+
+import "Builtins.pkl" as Extra
+import "Config.pkl" as Config
+
+/// One step of a group or of a hook's defaults.
+///
+/// `after` names the step that must finish first when the hook runs fixes.
+/// Both hooks that fix use the same order, so one field serves them.
+class NamedStep {
+  name: String
+  after: String = ""
+  step: Config.Step
+}
+
+/// hk's oxfmt builtin selects JSON, YAML, TOML, Markdown, HTML, and CSS as
+/// well as JavaScript and TypeScript. These copies narrow it to one group's
+/// files, so two groups never format the same file and fight over it.
+local oxfmtBackend = (Hk.oxfmt) {
+  glob = List("**/*.ts", "**/*.mts", "**/*.cts", "**/*.js", "**/*.mjs", "**/*.cjs")
+}
+
+local oxfmtFrontend = (Hk.oxfmt) {
+  glob = List("**/*.jsx", "**/*.tsx", "**/*.vue", "**/*.svelte", "**/*.mdx", "**/*.astro")
+}
+
+local oxfmtJson = (Hk.oxfmt) {
+  glob = List("**/*.json", "**/*.jsonc", "**/*.json5")
+}
+
+local oxLintBackend = (Hk.ox_lint) {
+  glob = List("**/*.ts", "**/*.mts", "**/*.cts", "**/*.js", "**/*.mjs", "**/*.cjs")
+}
+
+local oxLintFrontend = (Hk.ox_lint) {
+  glob = List("**/*.jsx", "**/*.tsx", "**/*.vue", "**/*.svelte", "**/*.astro")
+}
+
+/// Steps that every file hook runs before the selected groups.
+///
+/// The two steps that rewrite every text file run first and in order. The rest
+/// wait only for `trailing_whitespace`, so each starts as soon as its own files
+/// are clean, and `pkl` waits for the formatter that rewrites the files it
+/// reads.
+///
+/// `gitleaks` differs per hook: a commit or a check scans the worktree, and a
+/// pre-commit scan reads the staged content instead.
+local function fileDefaults(gitleaks: Config.Step): List<NamedStep> =
+  List(
+    new NamedStep { name = "newlines"; step = Hk.newlines },
+    new NamedStep {
+      name = "trailing_whitespace"
+      after = "newlines"
+      step = Hk.trailing_whitespace
+    },
+    new NamedStep { name = "pkl_format"; after = "trailing_whitespace"; step = Hk.pkl_format },
+    new NamedStep { name = "pkl"; after = "pkl_format"; step = Hk.pkl },
+    new NamedStep { name = "mdlint"; after = "trailing_whitespace"; step = Extra.mdlint },
+    new NamedStep { name = "mise"; after = "trailing_whitespace"; step = Hk.mise },
+    new NamedStep { name = "actionlint"; after = "trailing_whitespace"; step = Hk.actionlint },
+    new NamedStep { name = "gitleaks"; after = "trailing_whitespace"; step = gitleaks },
+  )
+
+local agentskills: List<NamedStep> =
+  List(new NamedStep { name = "skills_ref"; step = Extra.skills_ref })
+
+local buf: List<NamedStep> =
+  List(
+    new NamedStep { name = "buf_format"; step = Hk.buf_format },
+    new NamedStep { name = "buf_lint"; step = Hk.buf_lint },
+  )
+
+/// Fixers first, so the analyzers read the code the fixers leave behind. The
+/// readers name no `after`: they wait for the last fixer, not for each other.
+local go: List<NamedStep> =
+  List(
+    new NamedStep { name = "go_imports"; step = Extra.go_imports },
+    new NamedStep { name = "go_fumpt"; after = "go_imports"; step = Hk.go_fumpt },
+    new NamedStep { name = "go_fix"; after = "go_fumpt"; step = Hk.go_fix },
+    new NamedStep { name = "testifylint"; after = "go_fix"; step = Extra.testifylint },
+    new NamedStep { name = "constable"; after = "testifylint"; step = Extra.constable },
+    new NamedStep { name = "gomod_tidy"; after = "constable"; step = Hk.gomod_tidy },
+    new NamedStep { name = "go_vet"; step = Hk.go_vet },
+    new NamedStep { name = "staticcheck"; step = Hk.staticcheck },
+    new NamedStep { name = "go_vuln_check"; step = Hk.go_vuln_check },
+    new NamedStep { name = "err_check"; step = Hk.err_check },
+    new NamedStep { name = "go_check_sumtype"; step = Extra.go_check_sumtype },
+    new NamedStep { name = "nilaway"; step = Extra.nilaway },
+    new NamedStep { name = "go_sec"; step = Extra.go_sec },
+    new NamedStep { name = "gohawk"; step = Extra.gohawk },
+  )
+
+local json: List<NamedStep> = List(new NamedStep { name = "oxfmt_json"; step = oxfmtJson })
+
+local python: List<NamedStep> =
+  List(
+    new NamedStep { name = "ruff_format"; step = Hk.ruff_format },
+    new NamedStep { name = "ruff"; after = "ruff_format"; step = Hk.ruff },
+    new NamedStep { name = "ty"; step = Hk.ty },
+  )
+
+local rust: List<NamedStep> =
+  List(
+    new NamedStep { name = "cargo_fmt"; step = Hk.cargo_fmt },
+    new NamedStep { name = "cargo_check"; after = "cargo_fmt"; step = Hk.cargo_check },
+    new NamedStep { name = "cargo_clippy"; after = "cargo_check"; step = Hk.cargo_clippy },
+  )
+
+local shell: List<NamedStep> =
+  List(
+    new NamedStep { name = "shfmt"; step = Hk.shfmt },
+    new NamedStep { name = "shellcheck"; step = Hk.shellcheck },
+  )
+
+local toml: List<NamedStep> =
+  List(
+    new NamedStep { name = "tombi_format"; step = Hk.tombi_format },
+    new NamedStep { name = "tombi"; step = Hk.tombi },
+  )
+
+/// Backend code: TypeScript and JavaScript that a `tsconfig.json` covers.
+local tsBackend: List<NamedStep> =
+  List(
+    new NamedStep { name = "oxfmt_backend"; step = oxfmtBackend },
+    new NamedStep { name = "ox_lint_backend"; after = "oxfmt_backend"; step = oxLintBackend },
+    new NamedStep { name = "tsc"; step = Hk.tsc },
+  )
+
+/// Framework components, which no single `tsc` project covers.
+local tsFrontend: List<NamedStep> =
+  List(
+    new NamedStep { name = "oxfmt_frontend"; step = oxfmtFrontend },
+    new NamedStep { name = "ox_lint_frontend"; after = "oxfmt_frontend"; step = oxLintFrontend },
+  )
+
+local yaml: List<NamedStep> = List(new NamedStep { name = "yamlfmt"; step = Hk.yamlfmt })
+
+local function chainFor(name: String): List<NamedStep> =
+  if (name == "agentskills")
+    agentskills
+  else if (name == "buf")
+    buf
+  else if (name == "go")
+    go
+  else if (name == "json")
+    json
+  else if (name == "python")
+    python
+  else if (name == "rust")
+    rust
+  else if (name == "shell")
+    shell
+  else if (name == "toml")
+    toml
+  else if (name == "ts-backend")
+    tsBackend
+  else if (name == "ts-frontend")
+    tsFrontend
+  else if (name == "yaml")
+    yaml
+  else
+    throw(
+      "\"\(name)\" is not a group: use one of agentskills, buf, go, json, python, rust, shell, toml, ts-backend, ts-frontend, yaml"
+    )
+
+/// One function for a hook: the defaults first, then each selected group.
+///
+/// This is not named `steps`: hk's embedded Pkl evaluator fails to call a
+/// module-level function of that name when it takes a parameter, and reports
+/// `cannot call non-function`.
+/// The last step of a chain that rewrites files, or "" when the chain has none.
+local function lastFixer(chain: List<NamedStep>): String =
+  chain.fold("", (last, entry) -> if (entry.step.fix == null) last else entry.name)
+
+/// What must finish before one step runs in a hook that fixes.
+///
+/// A step that rewrites files waits for the step before it, so the fixers keep
+/// their order. A step that only reads waits for the last fixer and for no
+/// other reader, so readers run together and hk's file locks alone decide
+/// which of them wait. An explicit `after` wins over both, for a default that
+/// must read the output of a step other than the last fixer.
+local function dependsFor(entry: NamedStep, last: String): List<String> =
+  if (entry.after != "")
+    List(entry.after)
+  else if (entry.step.fix == null && last != "")
+    List(last)
+  else
+    List()
+
+/// One mapping for a chain of steps, ordered when the hook fixes.
+local function chainSteps(chain: List<NamedStep>, sequential: Boolean): Mapping<String, Config.Step> = new Mapping<
+  String,
+  Config.Step,
+> {
+  for (entry in chain) {
+    [entry.name] = (entry.step) {
+      when (sequential) { depends = dependsFor(entry, lastFixer(chain)) }
+    }
+  }
+}
+
+local function stepsFor(
+  base: List<NamedStep>,
+  groups: List<String>,
+  sequential: Boolean,
+): Mapping<String, Config.Step> = new Mapping<String, Config.Step> {
+  for (name, step in chainSteps(base, sequential)) { [name] = step }
+  for (group in groups) {
+    for (name, step in chainSteps(chainFor(group), sequential)) { [name] = step }
+  }
+}
+
+/// The check hook. `groups` adds to the defaults; pass `List()` for defaults
+/// alone.
+///
+/// hk's embedded Pkl evaluator has no default parameter values, so the
+/// argument is required.
+function check(groups: List<String>): Config.Hook = new Config.Hook {
+  steps = stepsFor(fileDefaults(Hk.gitleaks), groups, false)
+}
+
+/// The fix hook, which runs the fix commands and the same defaults as `check`.
+function fix(groups: List<String>): Config.Hook = new Config.Hook {
+  fix = true
+  steps = stepsFor(fileDefaults(Hk.gitleaks), groups, true)
+}
+
+/// The pre-commit hook, which fixes the staged files and then stages them.
+function preCommit(groups: List<String>): Config.Hook = new Config.Hook {
+  fix = true
+  stage = true
+  stash = "git"
+  steps = stepsFor(fileDefaults((Hk.gitleaks) { scan = "staged" }), groups, true)
+}
+
+/// The commit-msg hook, which rewrites the message file, so it takes no groups.
+function commitMsg(): Config.Hook = new Config.Hook {
+  fix = true
+  steps { ["change-id"] = Extra.timber_commit_msg }
+}
+
+/// All four hooks, with the same groups for each hook that takes them.
+function all(groups: List<String>): Mapping<String, Config.Hook> = new Mapping {
+  ["check"] = check(groups)
+  ["fix"] = fix(groups)
+  ["pre-commit"] = preCommit(groups)
+  ["commit-msg"] = commitMsg()
+}

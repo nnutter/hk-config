@@ -1,30 +1,36 @@
 // This repository's own hk config.
 //
 // It amends this package's Config.pkl so that the schema pin is exercised by
-// the real hk binary, and it runs the builtins from the working tree.
-// The hk version in the import below must equal the pin in Config.pkl. A
-// mismatch builds different Pkl types, and hk validate rejects the config.
+// the real hk binary, and it runs the hook templates and the builtins from the
+// working tree. The hk version in the import below must equal the pin in
+// Config.pkl. A mismatch builds different Pkl types, and hk validate rejects
+// the config.
 amends "Config.pkl"
 
 import "package://github.com/jdx/hk/releases/download/v2.11.1/hk@2.11.1#/Builtins.pkl" as Hk
 
-import "Builtins.pkl" as Extra
+import "Hooks.pkl" as Hooks
 
-steps {
-  ["constable"] = Extra.constable
-  ["go_check_sumtype"] = Extra.go_check_sumtype
-  ["go_imports"] = Extra.go_imports
-  ["go_sec"] = Extra.go_sec
-  ["gohawk"] = Extra.gohawk
-  ["hk_test"] = Hk.hk_test
-  ["jactionlint"] = Hk.jactionlint
-  ["mdlint"] = Extra.mdlint
-  ["nilaway"] = Extra.nilaway
-  ["testifylint"] = Extra.testifylint
-  ["skills_ref"] = Extra.skills_ref
-  ["pkl"] = (Hk.pkl) { depends = List("pkl_format") }
-  ["pkl_format"] = Hk.pkl_format
-  ["ruff"] = (Hk.ruff) { depends = List("ruff_format") }
-  ["ruff_format"] = Hk.ruff_format
-  ["ty"] = Hk.ty
+// The templates run over this repository's own files, so a change to them is
+// exercised before a release. The go and agentskills groups select no files
+// here, but the config still has to build them.
+//
+// `hk_test` runs the tests inside each builtin, so it belongs to the hooks
+// that run commands.
+hooks = (Hooks.all(List("go", "agentskills", "python"))) {
+  ["check"] {
+    steps {
+      ["hk_test"] = Hk.hk_test
+    }
+  }
+  ["fix"] {
+    steps {
+      ["hk_test"] = Hk.hk_test
+    }
+  }
+  ["pre-commit"] {
+    steps {
+      ["hk_test"] = Hk.hk_test
+    }
+  }
 }
