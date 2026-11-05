@@ -96,6 +96,10 @@ A consumer that switches to this template can therefore see findings they did no
 | `ts-frontend` | `oxfmt`, `ox_lint` over `jsx`, `tsx`, `vue`, `svelte`, `mdx`, `astro` |
 | `yaml` | `yamlfmt` |
 
+The `go` group's `constable` step embeds `testifylint` v0.0.1, while the removed `testifylint` pin named an older build of the fork.
+Version 0.0.1 also reports `useless-assert`, so a fix hook can exit 3 after `constable -fix` rewrites an assertion such as `assert.Equal(t, true, false)` to `assert.True(t, false)`.
+The developer must then change the assertion.
+
 A misspelled group fails the config with the list of group names.
 
 `fix` and `pre-commit` set `depends` inside each group: the steps that rewrite files form a chain, and every step that only reads waits for the last fixer and for no other reader, so the readers run together.
