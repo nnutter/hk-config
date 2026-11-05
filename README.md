@@ -29,15 +29,12 @@ Amending hk's `Config.pkl` directly also works, but then its version must equal 
 
 | Name | Runs |
 | --- | --- |
-| `constable` | `constable ./...` to check, `constable -fix ./...` to fix, on `**/*.go` |
-| `go_check_sumtype` | `go-check-sumtype -default-signifies-exhaustive=false -include-shared-interfaces ./...` on `**/*.go` |
+| `constable` | `constable ./...` to check, `constable -fix ./...` to fix, both with `-sumtype.default-signifies-exhaustive=false` and `-sumtype.include-shared-interfaces`, on `**/*.go` |
 | `go_imports` | `goimports -local "$(go list -m)" -l` and `-d` to check, `-w` to fix, on `**/*.go` |
 | `go_sec` | `gosec -severity high -quiet ./...` on `**/*.go` |
 | `gohawk` | `gohawk ./...` on `**/*.go` |
 | `mdlint` | `mdlint format --check` and `mdlint check --no-fix` to check, `mdlint format` and `mdlint check --fix` to fix, on `**/*.md` and `**/*.markdown` |
-| `nilaway` | `nilaway -include-pkgs $(go list -m) ./...` on `**/*.go` |
 | `skills_ref` | `agentskills validate` on each `**/SKILL.md`, no fix |
-| `testifylint` | `testifylint ./...` to check, `testifylint -fix ./...` to fix, on `**/*.go` |
 | `timber_commit_msg` | `timber review commit-msg` in a `commit-msg` hook |
 
 The Go builtins run at the `go.mod` workspace and need a Go toolchain.
@@ -46,14 +43,11 @@ Install the tools with mise:
 
 ```sh
 mise use "github:nnutter/mdlint@latest"
-mise use "go:github.com/alecthomas/go-check-sumtype/cmd/go-check-sumtype@latest"
 mise use "go:github.com/kojah/gohawk@latest"
 mise use "go:github.com/nnutter/constable/cmd/constable@latest"
 mise use "go:github.com/securego/gosec/v2/cmd/gosec@latest"
 mise use "go:github.com/nnutter/timber@latest"
-mise use "go:github.com/nnutter/testifylint@0.0.0-20261101203540-577bf922d916"
 mise use "go:golang.org/x/tools/cmd/goimports@latest"
-mise use "go:go.uber.org/nilaway/cmd/nilaway@latest"
 mise use "pypi:agentskills-tools@latest"
 mise use go@latest
 ```
@@ -92,7 +86,7 @@ A consumer that switches to this template can therefore see findings they did no
 | --- | --- |
 | `agentskills` | `skills_ref` |
 | `buf` | `buf_format`, `buf_lint` |
-| `go` | `go_imports`, `go_fumpt`, `go_fix`, `testifylint`, `gomod_tidy`, `go_vet`, `staticcheck`, `go_vuln_check`, `err_check`, `constable`, `go_check_sumtype`, `nilaway`, `go_sec`, `gohawk` |
+| `go` | `go_imports`, `go_fumpt`, `go_fix`, `constable`, `gomod_tidy`, `go_vet`, `staticcheck`, `go_vuln_check`, `go_sec`, `gohawk` |
 | `json` | `oxfmt` over `json`, `jsonc`, `json5` |
 | `python` | `ruff_format`, `ruff`, `ty` |
 | `rust` | `cargo_fmt`, `cargo_check`, `cargo_clippy` |
@@ -101,6 +95,10 @@ A consumer that switches to this template can therefore see findings they did no
 | `ts-backend` | `oxfmt`, `ox_lint`, `tsc` over `ts`, `mts`, `cts`, `js`, `mjs`, `cjs` |
 | `ts-frontend` | `oxfmt`, `ox_lint` over `jsx`, `tsx`, `vue`, `svelte`, `mdx`, `astro` |
 | `yaml` | `yamlfmt` |
+
+The `go` group's `constable` step embeds `testifylint` v0.0.1, while the removed `testifylint` pin named an older build of the fork.
+Version 0.0.1 also reports `useless-assert`, so a fix hook can exit 3 after `constable -fix` rewrites an assertion such as `assert.Equal(t, true, false)` to `assert.True(t, false)`.
+The developer must then change the assertion.
 
 A misspelled group fails the config with the list of group names.
 

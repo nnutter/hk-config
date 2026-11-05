@@ -33,10 +33,6 @@ BUILTINS = {
         'steps["mdlint"].check.command',
         "mdlint format --check {{files}} && mdlint check --no-fix {{files}}",
     ),
-    "go_check_sumtype": (
-        'steps["go_check_sumtype"].check.command.argv.join(" ")',
-        "go-check-sumtype -default-signifies-exhaustive=false -include-shared-interfaces ./...",
-    ),
     "go_imports": (
         'List(steps["go_imports"].check_list_files.command, steps["go_imports"].check_diff.command, steps["go_imports"].fix.command).join("\\n")',
         """\
@@ -54,7 +50,7 @@ goimports -local "$(go list -m)" -w {{files}}""",
     ),
     "constable": (
         'steps["constable"].fix.command.argv.join(" ")',
-        "constable -fix ./...",
+        "constable -fix -sumtype.default-signifies-exhaustive=false -sumtype.include-shared-interfaces ./...",
     ),
     "go_sec": (
         'steps["go_sec"].check.command',
@@ -63,10 +59,6 @@ goimports -local "$(go list -m)" -w {{files}}""",
     "gohawk": (
         'steps["gohawk"].check.command.argv.join(" ")',
         "gohawk ./...",
-    ),
-    "nilaway": (
-        'steps["nilaway"].check.command',
-        "nilaway -include-pkgs $(go list -m) ./...",
     ),
     "skills_ref": (
         'steps["skills_ref"].check.command',
@@ -102,7 +94,7 @@ HOOKS = {
     ),
     "fix orders a group": (
         'Hooks.fix(List("go")).steps["constable"].depends',
-        'List("testifylint")',
+        'List("go_fix")',
     ),
     "a group's readers wait for its last fixer": (
         'Hooks.fix(List("go")).steps["go_sec"].depends',

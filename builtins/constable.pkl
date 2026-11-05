@@ -1,7 +1,13 @@
 import "../Config.pkl" as Config
 
 /// Lints Go code with constable: non-mutating contracts, method order,
-/// complexity, predicates, and testify usage.
+/// complexity, predicates, testify usage, and the embedded errcheck, sumtype,
+/// testifylint, and nilaway analyzers.
+///
+/// The sum type flags keep the check that this package's own `sumtype` step
+/// made before constable embedded the analyzer: a `default` clause does not
+/// count as coverage, and a switch may be exhaustive through the interfaces
+/// that the variants implement.
 ///
 /// `-fix` applies the method-order fixes that the methodical analyzer offers.
 /// The tool rewrites a file only when Git tracks it with no changes, so the fix
@@ -11,11 +17,28 @@ constable = new Config.Step {
   workspace_indicator = "go.mod"
   dir = "{{workspace}}"
   check = new Config.CommandSpec {
-    command = new Config.Command { argv = List("constable", "./...") }
+    command = new Config.Command {
+      argv =
+        List(
+          "constable",
+          "-sumtype.default-signifies-exhaustive=false",
+          "-sumtype.include-shared-interfaces",
+          "./...",
+        )
+    }
     effect = "read"
   }
   fix = new Config.CommandSpec {
-    command = new Config.Command { argv = List("constable", "-fix", "./...") }
+    command = new Config.Command {
+      argv =
+        List(
+          "constable",
+          "-fix",
+          "-sumtype.default-signifies-exhaustive=false",
+          "-sumtype.include-shared-interfaces",
+          "./...",
+        )
+    }
     effect = "write"
   }
   // The tool prints `path:line:column: message`.
@@ -83,6 +106,50 @@ constable = new Config.Step {
       \t_ = c
       }
       """ + "\n"
+    local const missingSumTypeVariant =
+      """
+      package main
+
+      //sumtype:decl
+      type Shape interface{ shape() }
+
+      type Circle struct{}
+
+      func (*Circle) shape() {}
+
+      type Square struct{}
+
+      func (*Square) shape() {}
+
+      func main() {
+      \tswitch Shape(nil).(type) {
+      \tcase *Circle:
+      \tdefault:
+      \t}
+      }
+      """
+    local const exhaustiveSumType =
+      """
+      package main
+
+      //sumtype:decl
+      type Shape interface{ shape() }
+
+      type Circle struct{}
+
+      func (*Circle) shape() {}
+
+      type Square struct{}
+
+      func (*Square) shape() {}
+
+      func main() {
+      \tswitch Shape(nil).(type) {
+      \tcase *Circle:
+      \tcase *Square:
+      \t}
+      }
+      """
     // The analyzer driver exits 3, not 1, when it reports a diagnostic.
     ["check mutated parameter"] = new Config.StepTest {
       tmpdir = true
@@ -114,6 +181,24 @@ constable = new Config.Step {
           ["main.go"] = sortedMethods
         }
       }
+    }
+    // A `default` clause does not excuse a missing variant, which is the
+    // strict half of the sum type check that the flags restore.
+    ["check missing sum type variant"] = new Config.StepTest {
+      tmpdir = true
+      write {
+        ["go.mod"] = "module example.com/test\n\ngo 1.21\n"
+        ["main.go"] = missingSumTypeVariant
+      }
+      expect { code = 3 }
+    }
+    ["check every sum type variant"] = new Config.StepTest {
+      tmpdir = true
+      write {
+        ["go.mod"] = "module example.com/test\n\ngo 1.21\n"
+        ["main.go"] = exhaustiveSumType
+      }
+      expect { code = 0 }
     }
   }
 }
