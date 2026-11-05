@@ -1,5 +1,6 @@
 [tools]
-hk = "2.11.1"  # keep in sync with the hk version pinned in Config.pkl
+# keep in sync with the hk version pinned in Config.pkl
+hk = "2.11.1"
 pkl = "latest"
 uv = "latest"
 go = "latest"
@@ -15,7 +16,9 @@ go = "latest"
 "go:golang.org/x/tools/cmd/goimports" = "latest"
 "github:nnutter/mdlint" = "latest"
 "pypi:agentskills-tools" = "latest"
-jactionlint = "latest"
+actionlint = "latest"
+gitleaks = "latest"
+gofumpt = "latest"
 shellcheck = "latest"
 ruff = "latest"
 ty = "latest"
