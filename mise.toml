@@ -44,3 +44,10 @@ run = "hk fix --all"
 [tasks.package]
 description = "Build the Pkl package into dist/"
 run = "pkl project package --output-path dist"
+
+[tasks.bump]
+description = "Bump the build version"
+run = [
+  "git tag v$(./scripts/update-hk)",
+  "echo git push origin $(git describe --tags)",
+]
