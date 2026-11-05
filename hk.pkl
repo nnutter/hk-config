@@ -12,12 +12,13 @@ import "package://github.com/jdx/hk/releases/download/v2.11.1/hk@2.11.1#/Builtin
 import "Hooks.pkl" as Hooks
 
 // The templates run over this repository's own files, so a change to them is
-// exercised before a release. The go and agentskills groups select no files
-// here, but the config still has to build them.
+// exercised before a release. The go, agentskills, and proto groups select no
+// files here, but the config still has to build them, and `hk_test` runs the
+// tests inside the steps that a group adds.
 //
 // `hk_test` runs the tests inside each builtin, so it belongs to the hooks
 // that run commands.
-hooks = (Hooks.all(List("go", "agentskills", "python"))) {
+hooks = (Hooks.all(List("go", "agentskills", "proto", "python"))) {
   ["check"] {
     steps {
       ["hk_test"] = Hk.hk_test

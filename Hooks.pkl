@@ -111,6 +111,8 @@ local python: List<NamedStep> =
     new NamedStep { name = "ty"; step = Hk.ty },
   )
 
+local proto: List<NamedStep> = List(new NamedStep { name = "api_linter"; step = Extra.api_linter })
+
 local rust: List<NamedStep> =
   List(
     new NamedStep { name = "cargo_fmt"; step = Hk.cargo_fmt },
@@ -158,6 +160,8 @@ local function chainFor(name: String): List<NamedStep> =
     json
   else if (name == "python")
     python
+  else if (name == "proto")
+    proto
   else if (name == "rust")
     rust
   else if (name == "shell")
@@ -172,7 +176,7 @@ local function chainFor(name: String): List<NamedStep> =
     yaml
   else
     throw(
-      "\"\(name)\" is not a group: use one of agentskills, buf, go, json, python, rust, shell, toml, ts-backend, ts-frontend, yaml"
+      "\"\(name)\" is not a group: use one of agentskills, buf, go, json, proto, python, rust, shell, toml, ts-backend, ts-frontend, yaml"
     )
 
 /// One function for a hook: the defaults first, then each selected group.

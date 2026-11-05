@@ -29,6 +29,7 @@ GROUPS = [
     "buf",
     "go",
     "json",
+    "proto",
     "python",
     "rust",
     "shell",

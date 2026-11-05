@@ -29,6 +29,10 @@ GITHUB_RELEASE = "https://github.com/nnutter/hk-config/releases/download/"
 # up with, and that command. String commands and Command objects read back
 # differently, so each entry spells out its own expression.
 BUILTINS = {
+    "api_linter": (
+        'steps["api_linter"].check.command.argv.join(" ")',
+        "api-linter --set-exit-status {{files}}",
+    ),
     "mdlint": (
         'steps["mdlint"].check.command',
         "mdlint format --check {{files}} && mdlint check --no-fix {{files}}",
@@ -90,6 +94,10 @@ HOOKS = {
     ),
     "a group adds its steps": (
         'Hooks.check(List("agentskills")).steps.containsKey("skills_ref")',
+        "true",
+    ),
+    "the proto group checks protos": (
+        'Hooks.check(List("proto")).steps.containsKey("api_linter")',
         "true",
     ),
     "fix orders a group": (

@@ -29,6 +29,7 @@ Amending hk's `Config.pkl` directly also works, but then its version must equal 
 
 | Name | Runs |
 | --- | --- |
+| `api_linter` | `api-linter --set-exit-status` on `**/*.proto` |
 | `constable` | `constable ./...` to check, `constable -fix ./...` to fix, both with `-sumtype.default-signifies-exhaustive=false` and `-sumtype.include-shared-interfaces`, on `**/*.go` |
 | `go_imports` | `goimports -local "$(go list -m)" -l` and `-d` to check, `-w` to fix, on `**/*.go` |
 | `go_sec` | `gosec -severity high -quiet ./...` on `**/*.go` |
@@ -39,10 +40,14 @@ Amending hk's `Config.pkl` directly also works, but then its version must equal 
 
 The Go builtins run at the `go.mod` workspace and need a Go toolchain.
 
+`api_linter` runs at the working directory, which has to be the root that the protos import from: the linter resolves an import against it and ignores an `-I` path inside it.
+A repository whose protos are rooted in `proto/` copies the step with `dir = "proto"` and `glob = List("proto/**/*.proto")`, and it needs the imports on disk, because a buf module cache is not on the import path.
+
 Install the tools with mise:
 
 ```sh
 mise use "github:nnutter/mdlint@latest"
+mise use "go:github.com/googleapis/api-linter/cmd/api-linter@latest"
 mise use "go:github.com/kojah/gohawk@latest"
 mise use "go:github.com/nnutter/constable/cmd/constable@latest"
 mise use "go:github.com/securego/gosec/v2/cmd/gosec@latest"
@@ -88,6 +93,7 @@ A consumer that switches to this template can therefore see findings they did no
 | `buf` | `buf_format`, `buf_lint` |
 | `go` | `go_imports`, `go_fumpt`, `go_fix`, `constable`, `gomod_tidy`, `go_vet`, `staticcheck`, `go_vuln_check`, `go_sec`, `gohawk` |
 | `json` | `oxfmt` over `json`, `jsonc`, `json5` |
+| `proto` | `api_linter` |
 | `python` | `ruff_format`, `ruff`, `ty` |
 | `rust` | `cargo_fmt`, `cargo_check`, `cargo_clippy` |
 | `shell` | `shfmt`, `shellcheck` |
