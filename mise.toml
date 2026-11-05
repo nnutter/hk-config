@@ -49,5 +49,5 @@ run = "pkl project package --output-path dist"
 description = "Bump the build version"
 run = [
   "git tag v$(./scripts/update-hk)",
-  "echo git push origin $(git describe --tags)",
+  "git push origin $(git describe --tags)",
 ]
