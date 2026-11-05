@@ -35,7 +35,6 @@ Amending hk's `Config.pkl` directly also works, but then its version must equal 
 | `go_sec` | `gosec -severity high -quiet ./...` on `**/*.go` |
 | `gohawk` | `gohawk ./...` on `**/*.go` |
 | `mdlint` | `mdlint format --check` and `mdlint check --no-fix` to check, `mdlint format` and `mdlint check --fix` to fix, on `**/*.md` and `**/*.markdown` |
-| `nilaway` | `nilaway -include-pkgs $(go list -m) ./...` on `**/*.go` |
 | `skills_ref` | `agentskills validate` on each `**/SKILL.md`, no fix |
 | `testifylint` | `testifylint ./...` to check, `testifylint -fix ./...` to fix, on `**/*.go` |
 | `timber_commit_msg` | `timber review commit-msg` in a `commit-msg` hook |
@@ -53,7 +52,6 @@ mise use "go:github.com/securego/gosec/v2/cmd/gosec@latest"
 mise use "go:github.com/nnutter/timber@latest"
 mise use "go:github.com/nnutter/testifylint@0.0.0-20261101203540-577bf922d916"
 mise use "go:golang.org/x/tools/cmd/goimports@latest"
-mise use "go:go.uber.org/nilaway/cmd/nilaway@latest"
 mise use "pypi:agentskills-tools@latest"
 mise use go@latest
 ```
@@ -92,7 +90,7 @@ A consumer that switches to this template can therefore see findings they did no
 | --- | --- |
 | `agentskills` | `skills_ref` |
 | `buf` | `buf_format`, `buf_lint` |
-| `go` | `go_imports`, `go_fumpt`, `go_fix`, `testifylint`, `gomod_tidy`, `go_vet`, `staticcheck`, `go_vuln_check`, `constable`, `go_check_sumtype`, `nilaway`, `go_sec`, `gohawk` |
+| `go` | `go_imports`, `go_fumpt`, `go_fix`, `testifylint`, `gomod_tidy`, `go_vet`, `staticcheck`, `go_vuln_check`, `constable`, `go_check_sumtype`, `go_sec`, `gohawk` |
 | `json` | `oxfmt` over `json`, `jsonc`, `json5` |
 | `python` | `ruff_format`, `ruff`, `ty` |
 | `rust` | `cargo_fmt`, `cargo_check`, `cargo_clippy` |

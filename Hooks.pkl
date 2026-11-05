@@ -100,7 +100,6 @@ local go: List<NamedStep> =
     new NamedStep { name = "staticcheck"; step = Hk.staticcheck },
     new NamedStep { name = "go_vuln_check"; step = Hk.go_vuln_check },
     new NamedStep { name = "go_check_sumtype"; step = Extra.go_check_sumtype },
-    new NamedStep { name = "nilaway"; step = Extra.nilaway },
     new NamedStep { name = "go_sec"; step = Extra.go_sec },
     new NamedStep { name = "gohawk"; step = Extra.gohawk },
   )

@@ -11,7 +11,6 @@ go = "latest"
 # minimum_release_age hides a release for 24 hours after it appears.
 "go:github.com/nnutter/testifylint" = "0.0.0-20261101203540-577bf922d916"
 "go:github.com/securego/gosec/v2/cmd/gosec" = "latest"
-"go:go.uber.org/nilaway/cmd/nilaway" = "latest"
 "go:github.com/nnutter/timber" = "latest"
 "go:golang.org/x/tools/cmd/goimports" = "latest"
 "github:nnutter/mdlint" = "latest"

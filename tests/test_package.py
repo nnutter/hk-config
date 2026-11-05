@@ -64,10 +64,6 @@ goimports -local "$(go list -m)" -w {{files}}""",
         'steps["gohawk"].check.command.argv.join(" ")',
         "gohawk ./...",
     ),
-    "nilaway": (
-        'steps["nilaway"].check.command',
-        "nilaway -include-pkgs $(go list -m) ./...",
-    ),
     "skills_ref": (
         'steps["skills_ref"].check.command',
         """\
