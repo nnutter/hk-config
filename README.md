@@ -53,6 +53,7 @@ mise use "go:github.com/nnutter/constable/cmd/constable@latest"
 mise use "go:github.com/securego/gosec/v2/cmd/gosec@latest"
 mise use "go:github.com/nnutter/timber@latest"
 mise use "go:golang.org/x/tools/cmd/goimports@latest"
+mise use buf@latest
 mise use "pypi:agentskills-tools@latest"
 mise use go@latest
 ```
@@ -90,10 +91,9 @@ A consumer that switches to this template can therefore see findings they did no
 | Group | Steps |
 | --- | --- |
 | `agentskills` | `skills_ref` |
-| `buf` | `buf_format`, `buf_lint` |
 | `go` | `go_imports`, `go_fumpt`, `go_fix`, `constable`, `gomod_tidy`, `go_vet`, `staticcheck`, `go_vuln_check`, `go_sec`, `gohawk` |
 | `json` | `oxfmt` over `json`, `jsonc`, `json5` |
-| `proto` | `api_linter` |
+| `proto` | `buf_format`, `buf_lint`, `api_linter` |
 | `python` | `ruff_format`, `ruff`, `ty` |
 | `rust` | `cargo_fmt`, `cargo_check`, `cargo_clippy` |
 | `shell` | `shfmt`, `shellcheck` |

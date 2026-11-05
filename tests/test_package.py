@@ -100,6 +100,10 @@ HOOKS = {
         'Hooks.check(List("proto")).steps.containsKey("api_linter")',
         "true",
     ),
+    "the proto group's readers wait for its formatter": (
+        'Hooks.fix(List("proto")).steps["api_linter"].depends',
+        'List("buf_format")',
+    ),
     "fix orders a group": (
         'Hooks.fix(List("go")).steps["constable"].depends',
         'List("go_fix")',
