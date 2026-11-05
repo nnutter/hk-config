@@ -50,7 +50,7 @@ goimports -local "$(go list -m)" -w {{files}}""",
     ),
     "constable": (
         'steps["constable"].fix.command.argv.join(" ")',
-        "constable -fix ./...",
+        "constable -fix -sumtype.default-signifies-exhaustive=false -sumtype.include-shared-interfaces ./...",
     ),
     "go_sec": (
         'steps["go_sec"].check.command',

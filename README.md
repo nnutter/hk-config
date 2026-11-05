@@ -29,7 +29,7 @@ Amending hk's `Config.pkl` directly also works, but then its version must equal 
 
 | Name | Runs |
 | --- | --- |
-| `constable` | `constable ./...` to check, `constable -fix ./...` to fix, on `**/*.go` |
+| `constable` | `constable ./...` to check, `constable -fix ./...` to fix, both with `-sumtype.default-signifies-exhaustive=false` and `-sumtype.include-shared-interfaces`, on `**/*.go` |
 | `go_imports` | `goimports -local "$(go list -m)" -l` and `-d` to check, `-w` to fix, on `**/*.go` |
 | `go_sec` | `gosec -severity high -quiet ./...` on `**/*.go` |
 | `gohawk` | `gohawk ./...` on `**/*.go` |
