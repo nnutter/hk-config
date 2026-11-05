@@ -92,7 +92,7 @@ A consumer that switches to this template can therefore see findings they did no
 | --- | --- |
 | `agentskills` | `skills_ref` |
 | `buf` | `buf_format`, `buf_lint` |
-| `go` | `go_imports`, `go_fumpt`, `go_fix`, `testifylint`, `gomod_tidy`, `go_vet`, `staticcheck`, `go_vuln_check`, `err_check`, `constable`, `go_check_sumtype`, `nilaway`, `go_sec`, `gohawk` |
+| `go` | `go_imports`, `go_fumpt`, `go_fix`, `testifylint`, `gomod_tidy`, `go_vet`, `staticcheck`, `go_vuln_check`, `constable`, `go_check_sumtype`, `nilaway`, `go_sec`, `gohawk` |
 | `json` | `oxfmt` over `json`, `jsonc`, `json5` |
 | `python` | `ruff_format`, `ruff`, `ty` |
 | `rust` | `cargo_fmt`, `cargo_check`, `cargo_clippy` |
