@@ -1,3 +1,6 @@
+[settings]
+minimum_release_age = "0"
+
 [tools]
 # keep in sync with the hk version pinned in Config.pkl
 hk = "2.11.1"
