@@ -48,10 +48,23 @@ A repository that generates from other inputs adds them to its glob.
 A repository whose protos are rooted in `proto/` sets `dir = "proto"`, and the default glob then selects the files under that directory.
 `api_linter` needs the imports on disk, because a buf module cache is not on the import path.
 
-`api_linter_buf` runs the same way, at the root of a buf module, and pipes a descriptor set from `buf build` into the linter.
+`api_linter_buf` runs at the root of a buf module and pipes a descriptor set from `buf build` into the linter.
 Buf then resolves imports from other modules, including the module cache.
 It needs `buf` and `api-linter`, and it runs on bash because it uses process substitution.
-The `proto` hook group keeps `api_linter`, so a consumer that selects `api_linter_buf` replaces that step.
+The `proto` hook group selects it, so it runs only where a `buf.yaml` exists at the workspace root.
+
+`api_linter` runs the same linter without buf, so it needs the imports on disk.
+A consumer whose imports are all on disk replaces the group's step with `api_linter`:
+
+```pkl
+hooks = (Hooks.all(List("proto"))) {
+  ["check"] {
+    steps {
+      ["api_linter"] = Extra.api_linter
+    }
+  }
+}
+```
 
 Install the tools with mise:
 
@@ -103,7 +116,7 @@ A consumer that switches to this template can therefore see findings they did no
 | `agentskills` | `skills_ref` |
 | `go` | `go_generate`, `go_imports`, `go_fumpt`, `go_fix`, `constable`, `gomod_tidy`, `go_vet`, `staticcheck`, `go_vuln_check`, `go_sec`, `gohawk` |
 | `json` | `oxfmt` over `json`, `jsonc`, `json5` |
-| `proto` | `buf_format`, `buf_lint`, `api_linter` |
+| `proto` | `buf_format`, `buf_lint`, `api_linter_buf` |
 | `python` | `ruff_format`, `ruff`, `ty` |
 | `rust` | `cargo_fmt`, `cargo_check`, `cargo_clippy` |
 | `shell` | `shfmt`, `shellcheck` |

@@ -113,7 +113,7 @@ local proto: List<NamedStep> =
   List(
     new NamedStep { name = "buf_format"; step = Hk.buf_format },
     new NamedStep { name = "buf_lint"; step = Hk.buf_lint },
-    new NamedStep { name = "api_linter"; step = Extra.api_linter },
+    new NamedStep { name = "api_linter_buf"; step = Extra.api_linter_buf },
   )
 
 local rust: List<NamedStep> =

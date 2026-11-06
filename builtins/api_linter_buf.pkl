@@ -2,6 +2,8 @@ import "../Config.pkl" as Config
 
 /// Checks protos with api-linter, letting buf resolve every import.
 ///
+/// The `proto` hook group selects this step.
+///
 /// api-linter resolves an import against the working directory, and a buf
 /// module cache is not on that path. A descriptor set carries the imports, so
 /// the step pipes one from `buf build` into the linter and needs no temp file.
@@ -13,7 +15,7 @@ import "../Config.pkl" as Config
 /// there:
 ///
 /// ```pkl
-/// ["api_linter"] = (Extra.api_linter_buf) {
+/// ["api_linter_buf"] = (Extra.api_linter_buf) {
 ///   dir = "proto"
 ///   glob = List("proto/**/*.proto")
 /// }

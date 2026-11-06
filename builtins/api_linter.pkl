@@ -3,6 +3,10 @@ import "../Config.pkl" as Config
 /// Checks protobuf APIs against Google's API Improvement Proposals with
 /// Google's api-linter.
 ///
+/// The `proto` hook group selects `api_linter_buf` instead, which lets buf
+/// resolve the imports. This step stays for a repository that holds its
+/// imports on disk.
+///
 /// The linter prints its findings and then exits 0, so the check passes
 /// `--set-exit-status`: without that flag no finding fails a hook.
 ///
@@ -16,6 +20,9 @@ import "../Config.pkl" as Config
 ///   dir = "proto"
 /// }
 /// ```
+///
+/// A consumer that runs the `proto` hook group adds this step to replace the
+/// group's `api_linter_buf`.
 ///
 /// The linter also reads no config file unless `--config` names one. There is
 /// no fix command: the tool reports what to change and changes nothing.

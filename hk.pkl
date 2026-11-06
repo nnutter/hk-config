@@ -15,15 +15,15 @@ import "Hooks.pkl" as Hooks
 // The templates run over this repository's own files, so a change to them is
 // exercised before a release. The go, agentskills, and proto groups select no
 // files here, but the config still has to build them, and `hk_test` runs the
-// tests inside the steps that a group adds.
-//
+// tests inside the steps that a group adds. The `proto` group brings
+// `api_linter_buf`, so the plain `api_linter` is added here to keep its tests.
 // `hk_test` runs the tests inside each builtin, so it belongs to the hooks
 // that run commands.
 hooks = (Hooks.all(List("go", "agentskills", "proto", "python"))) {
   ["check"] {
     steps {
       ["hk_test"] = Hk.hk_test
-      ["api_linter_buf"] = Extra.api_linter_buf
+      ["api_linter"] = Extra.api_linter
     }
   }
   ["fix"] {
