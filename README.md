@@ -70,11 +70,11 @@ Install the tools with mise:
 
 ```sh
 mise use "github:nnutter/mdlint@latest"
-mise use "go:github.com/googleapis/api-linter/cmd/api-linter@latest"
-mise use "go:github.com/kojah/gohawk@latest"
-mise use "go:github.com/nnutter/constable/cmd/constable@latest"
-mise use "go:github.com/securego/gosec/v2/cmd/gosec@latest"
-mise use "go:github.com/nnutter/timber@latest"
+mise use "github:googleapis/api-linter@latest"
+mise use "github:kojah/gohawk@latest"
+mise use "github:nnutter/constable@latest"
+mise use "github:securego/gosec@latest"
+mise use "github:nnutter/timber@latest"
 mise use "go:golang.org/x/tools/cmd/goimports@latest"
 mise use betterleaks@latest
 mise use buf@latest
