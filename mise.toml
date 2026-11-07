@@ -1,5 +1,7 @@
 [settings]
-minimum_release_age = "0"
+# A release waits a week before mise installs it, so a compromised release
+# cannot reach every machine that installs the tools of this repository.
+minimum_release_age = "7d"
 
 [tools]
 # keep in sync with the hk version pinned in Config.pkl
@@ -40,6 +42,17 @@ run = [
 [tasks.fix]
 description = "Run hk's fixes over every file"
 run = "hk fix --all"
+
+[tasks.upgrade]
+description = "Upgrade the tools to their newest releases"
+run = [
+  "mise upgrade",
+  # The tools of this repository wait for the age of the setting, so they
+  # need the age of zero to leave the queue.
+  "mise upgrade --minimum-release-age 0 github:nnutter/timber@latest",
+  "mise upgrade --minimum-release-age 0 github:nnutter/constable@latest",
+  "mise upgrade --minimum-release-age 0 github:nnutter/mdlint@latest",
+]
 
 [tasks.package]
 description = "Build the Pkl package into dist/"
