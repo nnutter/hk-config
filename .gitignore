@@ -1,4 +1,7 @@
-.mise/
+# mise keeps the dependency graph of a locked tool in a sidecar directory,
+# and the lockfile names that directory, so it belongs in the repository.
+.mise/*
+!.mise/locks/
 .pytest_cache/
 .venv/
 __pycache__/
