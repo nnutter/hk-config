@@ -1,27 +1,32 @@
 [settings]
-minimum_release_age = "0"
+# A release waits a week before mise installs it, so a compromised release
+# cannot reach every machine that installs the tools of this repository.
+minimum_release_age = "7d"
 
 [tools]
 # keep in sync with the hk version pinned in Config.pkl
 hk = "2.11.1"
-pkl = "latest"
-uv = "latest"
-go = "latest"
-"go:github.com/googleapis/api-linter/cmd/api-linter" = "latest"
+"github:googleapis/api-linter" = "latest"
+# The release binary of gohawk reads the export data of an older Go, and the
+# Go of this repository writes a newer format, so gohawk is built from source.
 "go:github.com/kojah/gohawk" = "latest"
-"go:github.com/nnutter/constable/cmd/constable" = "latest"
-"go:github.com/securego/gosec/v2/cmd/gosec" = "latest"
-"go:github.com/nnutter/timber" = "latest"
-"go:golang.org/x/tools/cmd/goimports" = "latest"
+"github:nnutter/constable" = "latest"
 "github:nnutter/mdlint" = "latest"
+"github:nnutter/timber" = "latest"
+"github:securego/gosec" = "latest"
+"go:golang.org/x/tools/cmd/goimports" = "latest"
 "pypi:agentskills-tools" = "latest"
-jactionlint = "latest"
-gitleaks = "latest"
-gofumpt = "latest"
+betterleaks = "latest"
 buf = "latest"
-shellcheck = "latest"
+go = "latest"
+gofumpt = "latest"
+jactionlint = "latest"
+pkl = "latest"
+python = "3.14"
 ruff = "latest"
+shellcheck = "latest"
 ty = "latest"
+uv = "latest"
 
 [tasks.setup]
 description = "Install hk's git hooks in this checkout"
@@ -40,6 +45,21 @@ run = [
 [tasks.fix]
 description = "Run hk's fixes over every file"
 run = "hk fix --all"
+
+[tasks.upgrade]
+description = "Upgrade the tools to their newest releases"
+run = [
+  "mise upgrade",
+  # The tools of this repository wait for the age of the setting, so they
+  # need the age of zero to leave the queue.
+  "mise upgrade --minimum-release-age 0 github:nnutter/timber@latest",
+  "mise upgrade --minimum-release-age 0 github:nnutter/constable@latest",
+  "mise upgrade --minimum-release-age 0 github:nnutter/mdlint@latest",
+  "mise lock --minimum-release-age 0 github:nnutter/timber@latest",
+  "mise lock --minimum-release-age 0 github:nnutter/constable@latest",
+  "mise lock --minimum-release-age 0 github:nnutter/mdlint@latest",
+  "mise lock",
+]
 
 [tasks.package]
 description = "Build the Pkl package into dist/"
