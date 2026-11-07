@@ -149,16 +149,16 @@ HOOKS = {
         "jactionlint --format gcc {{files}}",
     ),
     "the secrets scan waits for the last default fixer": (
-        'Hooks.fix(List()).steps["gitleaks"].depends',
+        'Hooks.fix(List()).steps["betterleaks"].depends',
         'List("jactionlint")',
     ),
-    "fix scans the worktree for secrets": (
-        'Hooks.fix(List()).steps["gitleaks"].check.command.argv.join(" ")',
-        "gitleaks dir --redact --verbose --no-banner .",
+    "fix scans the files for secrets": (
+        'Hooks.fix(List()).steps["betterleaks"].check.command.argv.join(" ")',
+        "betterleaks dir --redact --verbose --no-banner {{files}}",
     ),
-    "pre-commit scans staged content for secrets": (
-        'Hooks.preCommit(List()).steps["gitleaks"].check.command.argv.join(" ")',
-        "gitleaks git --pre-commit --redact --staged --verbose --no-banner",
+    "pre-commit scans the staged files for secrets": (
+        'Hooks.preCommit(List()).steps["betterleaks"].check.command.argv.join(" ")',
+        "betterleaks dir --redact --verbose --no-banner {{files}}",
     ),
     "pre-commit orders ts-backend": (
         'Hooks.preCommit(List("ts-backend")).steps["tsc"].depends',

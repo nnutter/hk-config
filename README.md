@@ -76,10 +76,16 @@ mise use "go:github.com/nnutter/constable/cmd/constable@latest"
 mise use "go:github.com/securego/gosec/v2/cmd/gosec@latest"
 mise use "go:github.com/nnutter/timber@latest"
 mise use "go:golang.org/x/tools/cmd/goimports@latest"
+mise use betterleaks@latest
 mise use buf@latest
 mise use "pypi:agentskills-tools@latest"
 mise use go@latest
 ```
+
+`betterleaks` is the maintained successor to `gitleaks`, from the same authors.
+The hook templates use the `betterleaks` builtin of hk, so they scan the files that the hook selects.
+gitleaks loads `.gitleaks.toml` from the target directory on its own.
+betterleaks loads that file only with `--unsafe-auto-load-config`, and the builtin of hk does not set the flag, so a repository with such a file has to set the flag in its own step.
 
 ## Hooks
 
@@ -100,9 +106,9 @@ Each hook runs its own default steps, and `groups` adds more.
 
 | Hook | Default steps |
 | --- | --- |
-| `check` | `newlines`, `trailing_whitespace`, `pkl_format`, `pkl`, `mdlint`, `mise`, `jactionlint`, `gitleaks` over the worktree |
+| `check` | `newlines`, `trailing_whitespace`, `pkl_format`, `pkl`, `mdlint`, `mise`, `jactionlint`, `betterleaks` over the worktree |
 | `fix` | the same steps, running the fix commands |
-| `pre-commit` | the same steps, with `gitleaks` over staged content, staging the fixes |
+| `pre-commit` | the same steps, with `betterleaks` over the staged files, staging the fixes |
 | `commit-msg` | `change-id` only, because it rewrites the message file |
 
 `jactionlint` is hk's builtin for `jdx/jactionlint`, a maintained fork of `actionlint` that also reads composite actions and Dependabot configuration.
@@ -132,7 +138,7 @@ The developer must then change the assertion.
 A misspelled group fails the config with the list of group names.
 
 `fix` and `pre-commit` set `depends` inside each group: the steps that rewrite files form a chain, and every step that only reads waits for the last fixer and for no other reader, so the readers run together.
-The default steps order the same way: `newlines` then `trailing_whitespace`, and then `pkl_format`, `mdlint`, `mise`, and `jactionlint` each wait only for `trailing_whitespace`, while `pkl` waits for `pkl_format` and `gitleaks` waits for `jactionlint`, the last default step that rewrites files.
+The default steps order the same way: `newlines` then `trailing_whitespace`, and then `pkl_format`, `mdlint`, `mise`, and `jactionlint` each wait only for `trailing_whitespace`, while `pkl` waits for `pkl_format` and `betterleaks` waits for `jactionlint`, the last default step that rewrites files.
 Groups have no `depends` between them, so they run at the same time when their file selections differ. hk's file locks still serialize steps that select the same file, which is why `newlines` and `trailing_whitespace` — both select every text file — wait for each other. `check` sets no `depends`, so every step runs at once.
 
 A consumer adds a step after the template, and drops a default step with hk's own setting:

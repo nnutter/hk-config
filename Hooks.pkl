@@ -56,12 +56,12 @@ local oxLintFrontend = (Hk.ox_lint) {
 /// The two steps that rewrite every text file run first and in order. The steps
 /// that rewrite only their own files wait for `trailing_whitespace`, so each
 /// starts as soon as its own files are clean, and `pkl` waits for the formatter
-/// that rewrites the files it reads. `gitleaks` names no `after`, so it waits
-/// for the last step that rewrites files.
+/// that rewrites the files it reads. `betterleaks` names no `after`, so it
+/// waits for the last step that rewrites files.
 ///
-/// `gitleaks` differs per hook: a commit or a check scans the worktree, and a
-/// pre-commit scan reads the staged content instead.
-local function fileDefaults(gitleaks: Config.Step): List<NamedStep> =
+/// `betterleaks` scans the files the hook selects, so a commit scans the
+/// staged files and a check scans the worktree.
+local function fileDefaults(): List<NamedStep> =
   List(
     new NamedStep { name = "newlines"; step = Hk.newlines },
     new NamedStep {
@@ -74,7 +74,7 @@ local function fileDefaults(gitleaks: Config.Step): List<NamedStep> =
     new NamedStep { name = "mdlint"; after = "trailing_whitespace"; step = Extra.mdlint },
     new NamedStep { name = "mise"; after = "trailing_whitespace"; step = Hk.mise },
     new NamedStep { name = "jactionlint"; after = "trailing_whitespace"; step = Hk.jactionlint },
-    new NamedStep { name = "gitleaks"; step = gitleaks },
+    new NamedStep { name = "betterleaks"; step = Hk.betterleaks },
   )
 
 local agentskills: List<NamedStep> =
@@ -233,13 +233,13 @@ local function stepsFor(
 /// hk's embedded Pkl evaluator has no default parameter values, so the
 /// argument is required.
 function check(groups: List<String>): Config.Hook = new Config.Hook {
-  steps = stepsFor(fileDefaults(Hk.gitleaks), groups, false)
+  steps = stepsFor(fileDefaults(), groups, false)
 }
 
 /// The fix hook, which runs the fix commands and the same defaults as `check`.
 function fix(groups: List<String>): Config.Hook = new Config.Hook {
   fix = true
-  steps = stepsFor(fileDefaults(Hk.gitleaks), groups, true)
+  steps = stepsFor(fileDefaults(), groups, true)
 }
 
 /// The pre-commit hook, which fixes the staged files and then stages them.
@@ -247,7 +247,7 @@ function preCommit(groups: List<String>): Config.Hook = new Config.Hook {
   fix = true
   stage = true
   stash = "git"
-  steps = stepsFor(fileDefaults((Hk.gitleaks) { scan = "staged" }), groups, true)
+  steps = stepsFor(fileDefaults(), groups, true)
 }
 
 /// The commit-msg hook, which rewrites the message file, so it takes no groups.
