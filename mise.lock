@@ -125,47 +125,6 @@ checksum_source = "mise-versions"
 url = "https://github.com/googleapis/api-linter/releases/download/v2.4.1/api-linter-2.4.1-darwin-amd64.tar.gz"
 url_api = "https://api.github.com/repos/googleapis/api-linter/releases/assets/689861461"
 
-[[tools."github:kojah/gohawk"]]
-version = "0.7.1"
-backend = "github:kojah/gohawk"
-specifiers = ["latest"]
-
-[tools."github:kojah/gohawk"."platforms.linux-arm64"]
-checksum = "sha256:c7e689869a86c2aadefab971635be06f21be1b3b764544a1d1da8d737eae0613"
-checksum_source = "mise-versions"
-url = "https://github.com/kojah/gohawk/releases/download/v0.7.1/gohawk_0.7.1_linux_arm64.tar.gz"
-url_api = "https://api.github.com/repos/kojah/gohawk/releases/assets/678936476"
-
-[tools."github:kojah/gohawk"."platforms.linux-arm64-musl"]
-checksum = "sha256:c7e689869a86c2aadefab971635be06f21be1b3b764544a1d1da8d737eae0613"
-checksum_source = "mise-versions"
-url = "https://github.com/kojah/gohawk/releases/download/v0.7.1/gohawk_0.7.1_linux_arm64.tar.gz"
-url_api = "https://api.github.com/repos/kojah/gohawk/releases/assets/678936476"
-
-[tools."github:kojah/gohawk"."platforms.linux-x64"]
-checksum = "sha256:2ad82104519131429bb2285d5552f106c64f2866077e1d07b159413fdefd2b8c"
-checksum_source = "mise-versions"
-url = "https://github.com/kojah/gohawk/releases/download/v0.7.1/gohawk_0.7.1_linux_amd64.tar.gz"
-url_api = "https://api.github.com/repos/kojah/gohawk/releases/assets/678936475"
-
-[tools."github:kojah/gohawk"."platforms.linux-x64-musl"]
-checksum = "sha256:2ad82104519131429bb2285d5552f106c64f2866077e1d07b159413fdefd2b8c"
-checksum_source = "mise-versions"
-url = "https://github.com/kojah/gohawk/releases/download/v0.7.1/gohawk_0.7.1_linux_amd64.tar.gz"
-url_api = "https://api.github.com/repos/kojah/gohawk/releases/assets/678936475"
-
-[tools."github:kojah/gohawk"."platforms.macos-arm64"]
-checksum = "sha256:f8ef6ee8926d494971634cd6b897994e8f31e1f6e57bd6f019f13ac9713e95e9"
-checksum_source = "mise-versions"
-url = "https://github.com/kojah/gohawk/releases/download/v0.7.1/gohawk_0.7.1_darwin_arm64.tar.gz"
-url_api = "https://api.github.com/repos/kojah/gohawk/releases/assets/678936478"
-
-[tools."github:kojah/gohawk"."platforms.macos-x64"]
-checksum = "sha256:d29da931de90d508989648ff541b40e50aa0b840fed8067c8867663fc9d84942"
-checksum_source = "mise-versions"
-url = "https://github.com/kojah/gohawk/releases/download/v0.7.1/gohawk_0.7.1_darwin_amd64.tar.gz"
-url_api = "https://api.github.com/repos/kojah/gohawk/releases/assets/678936473"
-
 [[tools."github:nnutter/constable"]]
 version = "0.8.0"
 backend = "github:nnutter/constable"
@@ -358,6 +317,11 @@ url = "https://dl.google.com/go/go1.27.3.darwin-arm64.tar.gz"
 [tools.go."platforms.macos-x64"]
 checksum = "sha256:b6f8e931e4ab497fcde6da8ae4499a58f9d258e55c8a80824a516eae5950a750"
 url = "https://dl.google.com/go/go1.27.3.darwin-amd64.tar.gz"
+
+[[tools."go:github.com/kojah/gohawk"]]
+version = "0.7.1"
+backend = "go:github.com/kojah/gohawk"
+specifiers = ["latest"]
 
 [[tools."go:golang.org/x/tools/cmd/goimports"]]
 version = "0.52.0"
