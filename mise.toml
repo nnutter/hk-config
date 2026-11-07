@@ -24,6 +24,7 @@ buf = "latest"
 shellcheck = "latest"
 ruff = "latest"
 ty = "latest"
+python = "3.14"
 
 [tasks.setup]
 description = "Install hk's git hooks in this checkout"
