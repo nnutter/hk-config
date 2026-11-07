@@ -53,6 +53,10 @@ run = [
   "mise upgrade --minimum-release-age 0 github:nnutter/timber@latest",
   "mise upgrade --minimum-release-age 0 github:nnutter/constable@latest",
   "mise upgrade --minimum-release-age 0 github:nnutter/mdlint@latest",
+  "mise lock --minimum-release-age 0 github:nnutter/timber@latest",
+  "mise lock --minimum-release-age 0 github:nnutter/constable@latest",
+  "mise lock --minimum-release-age 0 github:nnutter/mdlint@latest",
+  "mise lock",
 ]
 
 [tasks.package]
