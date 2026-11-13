@@ -13,7 +13,7 @@
 /// ```
 module hk_config.Hooks
 
-import "package://github.com/jdx/hk/releases/download/v2.11.1/hk@2.11.1#/Builtins.pkl" as Hk
+import "package://github.com/jdx/hk/releases/download/v2.12.0/hk@2.12.0#/Builtins.pkl" as Hk
 
 import "Builtins.pkl" as Extra
 import "Config.pkl" as Config

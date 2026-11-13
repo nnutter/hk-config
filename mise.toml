@@ -5,7 +5,7 @@ minimum_release_age = "7d"
 
 [tools]
 # keep in sync with the hk version pinned in Config.pkl
-hk = "2.11.1"
+hk = "2.12.0"
 "github:googleapis/api-linter" = "latest"
 # The release binary of gohawk reads the export data of an older Go, and the
 # Go of this repository writes a newer format, so gohawk is built from source.

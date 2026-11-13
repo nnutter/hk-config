@@ -51,6 +51,8 @@ jobs:
         if: steps.hk.outputs.version != steps.pinned.outputs.version
         run: |
           version=$(scripts/update-hk "${{ steps.hk.outputs.version }}")
+          # mise-action installs with --locked, so the new pin needs its lock entry.
+          mise lock hk
           echo "version=$version" >>"$GITHUB_OUTPUT"
       # GITHUB_TOKEN cannot open a pull request in this repository, and the
       # events it starts create no workflow run, so the required check would
