@@ -37,3 +37,6 @@ api_linter = import("builtins/api_linter.pkl").api_linter
 
 /// Checks protos with api-linter and a buf descriptor set, so buf resolves imports.
 api_linter_buf = import("builtins/api_linter_buf.pkl").api_linter_buf
+
+/// Keeps `mise.lock` in step with `mise.toml` by running `mise lock`.
+mise_lock = import("builtins/mise_lock.pkl").mise_lock

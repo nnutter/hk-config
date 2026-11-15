@@ -81,6 +81,10 @@ exit $status""",
         'steps["timber_commit_msg"].fix.command.argv.join(" ")',
         "timber review commit-msg {{commit_msg_file}}",
     ),
+    "mise_lock": (
+        'steps["mise_lock"].fix.command.argv.join(" ")',
+        "mise lock",
+    ),
 }
 
 
@@ -147,6 +151,18 @@ HOOKS = {
     "defaults lint the workflows with jactionlint": (
         'Hooks.check(List()).steps["jactionlint"].check.command.argv.join(" ")',
         "jactionlint --format gcc {{files}}",
+    ),
+    "defaults include mise_lock": (
+        'Hooks.check(List()).steps.containsKey("mise_lock")',
+        "true",
+    ),
+    "mise_lock waits for the formatter": (
+        'Hooks.fix(List()).steps["mise_lock"].depends',
+        'List("mise")',
+    ),
+    "pre-commit locks after formatting": (
+        'Hooks.preCommit(List()).steps["mise_lock"].depends',
+        'List("mise")',
     ),
     "the secrets scan waits for the last default fixer": (
         'Hooks.fix(List()).steps["betterleaks"].depends',
