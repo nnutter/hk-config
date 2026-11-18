@@ -18,6 +18,7 @@ Without a version the script keeps the pin and only names the version to
 publish, which is how a revision gets released. Standard output carries that
 version alone, so a caller can capture it in a command substitution.
 """
+
 from __future__ import annotations
 
 import re
