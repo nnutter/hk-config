@@ -7,7 +7,7 @@
 // the config.
 amends "Config.pkl"
 
-import "package://github.com/jdx/hk/releases/download/v2.13.0/hk@2.13.0#/Builtins.pkl" as Hk
+import "package://github.com/jdx/hk/releases/download/v2.14.0/hk@2.14.0#/Builtins.pkl" as Hk
 
 import "Builtins.pkl" as Extra
 import "Hooks.pkl" as Hooks
